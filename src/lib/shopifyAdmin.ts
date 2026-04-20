@@ -43,6 +43,7 @@ export interface ShopifyProduct {
     descriptionHtml?: string;
     handle: string;
     productType: string;
+    vendor: string;
     tags: string[];
     collections?: {
       edges: Array<{
@@ -259,6 +260,7 @@ const PRODUCTS_ADMIN_QUERY = `
           description
           handle
           productType
+          vendor
           tags
           collections(first: 5) {
             edges {
@@ -330,6 +332,7 @@ const PRODUCT_BY_HANDLE_ADMIN_QUERY = `
       descriptionHtml
       handle
       productType
+      vendor
       tags
       collections(first: 5) {
         edges {
