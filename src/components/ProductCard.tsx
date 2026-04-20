@@ -100,13 +100,13 @@ const ProductCard = ({
           
           if (hasBestSeller || hasDocRec || hasNewLaunch || hasHerbal) return null;
           
-          // Show first tag if available, otherwise "Premium"
-          const displayTag = (product.node.tags && product.node.tags.length > 0) ? product.node.tags[0] : "Premium";
+          const tags = product.node.tags || [];
+          if (tags.length === 0) return null;
           
           return (
             <div className="absolute top-3 left-3 bg-white/80 backdrop-blur-md border border-[#F2EDE4] px-3 py-1 rounded-full flex items-center gap-1 shadow-sm z-10">
               <Star className="h-3 w-3 fill-[#C5A059] text-[#C5A059]" />
-              <span className="text-[9px] font-bold text-[#1A2E35] uppercase tracking-tighter">{displayTag}</span>
+              <span className="text-[9px] font-bold text-[#1A2E35] uppercase tracking-tighter">{tags[0]}</span>
             </div>
           );
         })()}

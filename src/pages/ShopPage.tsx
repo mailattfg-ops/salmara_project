@@ -131,13 +131,9 @@ const ShopPage = () => {
     setLoading(true);
     
     // Fetch products and collections in parallel
-    Promise.all([
-      fetchProductsViaAdmin(50),
-      fetchCollectionsViaAdmin(20)
-    ])
-      .then(async ([fetchedProducts, fetchedCollections]) => {
+    fetchProductsViaAdmin(50)
+      .then(async (fetchedProducts) => {
         setProducts(fetchedProducts);
-        setAvailableCollections(fetchedCollections);
         
         // Fetch reviews in bulk
         const ids = fetchedProducts.map((p: any) => p.node.id);
@@ -171,19 +167,16 @@ const ShopPage = () => {
 
   // Derived Categories from Shopify Collections
   const categories = useMemo(() => {
-    const colls = availableCollections.map(c => c.title);
-    return ["All Categories", ...colls];
-  }, [availableCollections]);
+    const types = Array.from(new Set(products.map(p => p.node.productType).filter(Boolean))).sort();
+    return ["All Categories", ...types];
+  }, [products]);
 
   // Filtering Logic
   const filteredProducts = useMemo(() => {
     return products.filter(p => {
       // 1. Category Filter (Check if product belongs to the selected Shopify Collection)
       if (selectedCategory && selectedCategory !== "All Categories") {
-        const belongsToCollection = p.node.collections?.edges.some(
-          edge => edge.node.title.toLowerCase() === selectedCategory.toLowerCase()
-        );
-        if (!belongsToCollection) return false;
+        if (p.node.productType?.toLowerCase() !== selectedCategory.toLowerCase()) return false;
       }
 
       // 3. Price Filter

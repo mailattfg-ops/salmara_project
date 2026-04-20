@@ -58,7 +58,9 @@ const FeaturedProducts = () => {
   useEffect(() => {
     fetchProductsViaAdmin(12)
       .then(async (fetchedProducts) => {
-        setProducts(fetchedProducts);
+        // Only show products that have tags in the featured section
+        const productsWithTags = fetchedProducts.filter(p => p.node.tags && p.node.tags.length > 0);
+        setProducts(productsWithTags);
         // Fetch reviews in bulk
         const ids = fetchedProducts.map(p => p.node.id);
         const reviewsData = await fetchBulkReviews(ids);
