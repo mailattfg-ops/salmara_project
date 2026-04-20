@@ -91,6 +91,26 @@ const ProductCard = ({
           )}
         </div>
 
+        {/* Dynamic Badge for other tags or Premium fallback */}
+        {(() => {
+          const hasBestSeller = product.node.tags?.includes('Best Seller') || product.node.handle === 'triphala-churna' || product.node.handle === 'triphala-tablets';
+          const hasDocRec = product.node.tags?.includes('Doctor Recommended') || product.node.handle === 'brahmi-hair-oil';
+          const hasNewLaunch = product.node.tags?.includes('New Launch') || product.node.handle === 'brahmi-hair-oil';
+          const hasHerbal = product.node.tags?.includes('100% Herbal') || product.node.handle === 'triphala-churna' || product.node.handle === 'triphala-tablets';
+          
+          if (hasBestSeller || hasDocRec || hasNewLaunch || hasHerbal) return null;
+          
+          // Show first tag if available, otherwise "Premium"
+          const displayTag = (product.node.tags && product.node.tags.length > 0) ? product.node.tags[0] : "Premium";
+          
+          return (
+            <div className="absolute top-3 left-3 bg-white/80 backdrop-blur-md border border-[#F2EDE4] px-3 py-1 rounded-full flex items-center gap-1 shadow-sm z-10">
+              <Star className="h-3 w-3 fill-[#C5A059] text-[#C5A059]" />
+              <span className="text-[9px] font-bold text-[#1A2E35] uppercase tracking-tighter">{displayTag}</span>
+            </div>
+          );
+        })()}
+
         {/* Wishlist Button */}
         <button 
           onClick={async (e) => {
@@ -107,14 +127,6 @@ const ProductCard = ({
         >
           <Heart className={`h-3.5 w-3.5 ${variant && isInWishlist(variant.id) ? 'fill-white' : ''}`} />
         </button>
-
-        {/* Default Premium Badge if no specific tags */}
-        {(!product.node.tags || product.node.tags.length === 0) && (
-          <div className="absolute top-3 left-3 bg-white/80 backdrop-blur-md border border-[#F2EDE4] px-3 py-1 rounded-full flex items-center gap-1 shadow-sm">
-            <Star className="h-3 w-3 fill-[#C5A059] text-[#C5A059]" />
-            <span className="text-[9px] font-bold text-[#1A2E35] uppercase tracking-tighter">Premium</span>
-          </div>
-        )}
       </Link>
 
       <div className="px-2">

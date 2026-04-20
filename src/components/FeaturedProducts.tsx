@@ -159,8 +159,8 @@ const FeaturedProducts = () => {
     }
   };
 
-  // Duplicate products for infinite marquee effect
-  const marqueeProducts = [...products, ...products, ...products];
+  // Duplicate products for infinite marquee effect only if we have enough items
+  const marqueeProducts = products.length >= 3 ? [...products, ...products, ...products] : products;
 
   return (
     <section id="products" className="py-6 md:py-8 lg:py-10 xl:py-12 bg-secondary overflow-hidden" ref={ref}>
@@ -184,11 +184,11 @@ const FeaturedProducts = () => {
         </div>
       ) : (
         <div className="relative">
-          {/* Marquee Container */}
-          <div className="flex overflow-hidden pause-on-hover">
+          {/* Marquee or Static Grid Container */}
+          <div className={`flex ${products.length >= 3 ? 'overflow-hidden pause-on-hover' : 'justify-center px-4'}`}>
             <div
-              className="flex gap-6 md:gap-8 lg:gap-10 xl:gap-12 animate-marquee"
-              style={{ width: "fit-content" }}
+              className={`flex gap-6 md:gap-8 lg:gap-10 xl:gap-12 ${products.length >= 3 ? 'animate-marquee' : 'py-8 flex-wrap justify-center'}`}
+              style={{ width: products.length >= 3 ? "fit-content" : "auto" }}
             >
               {marqueeProducts.map((product, idx) => (
                 <ProductCard
