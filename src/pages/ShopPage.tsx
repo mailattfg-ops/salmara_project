@@ -64,11 +64,9 @@ const priceRanges = [
 ];
 
 const sortByLabels: Record<string, string> = {
-  "Bestselling": "Bestselling",
   "Price: Low to High": "Price: Low to High",
   "Price: High to Low": "Price: High to Low",
   "Newest First": "Newest First",
-  "Doctor Recommended": "Doctor Recommended"
 };
 
 const getProductDisplayPrice = (product: ShopifyProduct) => {
@@ -116,7 +114,7 @@ const ShopPage = () => {
   const [selectedCategory, setSelectedCategory] = useState<string>("All Categories");
   const [selectedPriceRange, setSelectedPriceRange] = useState<string>("all");
   const [inStockOnly, setInStockOnly] = useState<boolean>(false);
-  const [sortBy, setSortBy] = useState("Bestselling");
+  const [sortBy, setSortBy] = useState("Newest First");
   const [searchQuery, setSearchQuery] = useState("");
   const [showMobileFilters, setShowMobileFilters] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
@@ -165,10 +163,15 @@ const ShopPage = () => {
     if (category !== null) setSelectedCategory(category);
   }, [searchParams]);
 
-  // Derived Categories from Shopify Collections
   const categories = useMemo(() => {
     const types = Array.from(new Set(products.map(p => p.node.productType).filter(Boolean))).sort();
     return ["All Categories", ...types];
+  }, [products]);
+
+  const sortOptions = useMemo(() => {
+    const base = ["Newest First", "Price: Low to High", "Price: High to Low"];
+    const tags = Array.from(new Set(products.flatMap(p => p.node.tags || []))).sort();
+    return [...base, ...tags];
   }, [products]);
 
   // Filtering Logic
@@ -215,15 +218,15 @@ const ShopPage = () => {
 
       if (sortBy === "Price: Low to High") return priceA - priceB;
       if (sortBy === "Price: High to Low") return priceB - priceA;
-      if (sortBy === "Newest First") return b.node.id.localeCompare(a.node.id); // Simple ID fallback for mock "newest"
-      if (sortBy === "Doctor Recommended") {
-        const isDocA = a.node.tags?.includes("Doctor Recommended") || a.node.handle === 'brahmi-hair-oil';
-        const isDocB = b.node.tags?.includes("Doctor Recommended") || b.node.handle === 'brahmi-hair-oil';
-        if (isDocA && !isDocB) return -1;
-        if (!isDocA && isDocB) return 1;
-        return 0;
-      }
-      return 0; // Default Bestselling
+      if (sortBy === "Newest First") return b.node.id.localeCompare(a.node.id);
+
+      // Tag-based sorting: Products with the selected tag come first
+      const hasTagA = a.node.tags?.includes(sortBy);
+      const hasTagB = b.node.tags?.includes(sortBy);
+      if (hasTagA && !hasTagB) return -1;
+      if (!hasTagA && hasTagB) return 1;
+      
+      return 0;
     });
   }, [products, selectedCategory, selectedPriceRange, inStockOnly, sortBy, searchQuery]);
 
@@ -434,15 +437,6 @@ const ShopPage = () => {
                         </DropdownMenuContent>
                       </DropdownMenu>
 
-                      {/* Availability Toggle */}
-                      <div className="flex items-center gap-3 py-1 px-3 rounded-lg hover:bg-white border border-transparent hover:border-[#F2EDE4] hover:shadow-sm transition-all cursor-pointer group" onClick={() => setInStockOnly(!inStockOnly)}>
-                        <span className="text-[11px] font-bold tracking-[0.2em] text-[#1A2E35] uppercase select-none">In Stock</span>
-                        <Switch
-                          checked={inStockOnly}
-                          onCheckedChange={setInStockOnly}
-                          className="data-[state=checked]:bg-primary data-[state=unchecked]:bg-[#F2EDE4]"
-                        />
-                      </div>
                     </div>
 
                     {/* Right: Sort By */}
@@ -455,7 +449,7 @@ const ShopPage = () => {
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end" className="w-64 rounded-2xl border-[#F2EDE4] shadow-2xl p-2 z-[100]">
                           <div className="space-y-1">
-                            {["Bestselling", "Price: Low to High", "Price: High to Low", "Newest First", "Doctor Recommended"].map((s) => (
+                            {sortOptions.map((s) => (
                               <DropdownMenuItem
                                 key={s}
                                 onClick={() => setSortBy(s)}
