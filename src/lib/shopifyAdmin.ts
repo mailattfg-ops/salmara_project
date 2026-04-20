@@ -85,6 +85,7 @@ export interface ShopifyProduct {
         };
       }>;
     };
+    status: string;
     options: {
       id: string;
       name: string;
@@ -248,12 +249,13 @@ const CUSTOMER_ORDERS_QUERY = `
 `;
 
 const PRODUCTS_ADMIN_QUERY = `
-  query GetProducts($first: Int!) {
-    products(first: $first) {
+  query GetProducts($first: Int!, $query: String) {
+    products(first: $first, query: $query) {
       edges {
         node {
           id
           title
+          status
           description
           handle
           productType
@@ -866,9 +868,9 @@ export async function updateCustomerCartId(customerId: string, cartId: string): 
 /**
  * Fetch products via the Admin API to get inventory data.
  */
-export async function fetchProductsViaAdmin(first = 20): Promise<any[]> {
+export async function fetchProductsViaAdmin(first = 20, query = "status:active"): Promise<any[]> {
   try {
-    const data = await adminApiRequest(PRODUCTS_ADMIN_QUERY, { first });
+    const data = await adminApiRequest(PRODUCTS_ADMIN_QUERY, { first, query });
     const productEdges = data?.data?.products?.edges || [];
     
     // Map Admin API response to match ShopifyProduct interface used in the app
