@@ -861,17 +861,20 @@ const ProductDetail = () => {
                   >
                     {/* Benefits Section */}
                     {getMetafieldValue('benefits') && (
-                      <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-8">
-                        {getMetafieldValue('benefits').split(/\n+/).map((benefit: string, i: number) => {
-                          return (
-                            <div key={i} className="space-y-3">
-                              <div className="h-10 w-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary mb-5">
-                                {getBenefitIcon(benefit)}
-                              </div>
-                              <h4 className="font-sans-clean font-bold text-base text-[#1A2E35] tracking-tight leading-relaxed">{benefit}</h4>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
+                        {getMetafieldValue('benefits').split(/\n+/).map((benefit: string, i: number) => (
+                          <div 
+                            key={i} 
+                            className="bg-white/50 backdrop-blur-sm border border-[#F2EDE4] p-8 rounded-3xl flex flex-col items-center text-center group hover:bg-white hover:shadow-xl hover:shadow-[#5A7A5C]/5 hover:border-primary/20 transition-all duration-500"
+                          >
+                            <div className="h-14 w-14 rounded-full bg-secondary flex items-center justify-center text-primary mb-6 group-hover:scale-110 transition-transform duration-500">
+                              <CheckCircle2 className="h-6 w-6" />
                             </div>
-                          );
-                        })}
+                            <h4 className="font-sans-clean font-bold text-base md:text-lg text-[#1A2E35] tracking-tight leading-relaxed">
+                              {benefit}
+                            </h4>
+                          </div>
+                        ))}
                       </div>
                     )}
 
