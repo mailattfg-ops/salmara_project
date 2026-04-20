@@ -385,7 +385,7 @@ const ProductDetail = () => {
     return <Activity className="h-4 w-4" />;
   };
 
-  const firstBenefit = getMetafieldValue('benefits')?.split(/[,\n]+/)[0]?.trim();
+  const firstBenefit = getMetafieldValue('benefits')?.split(/\n+/)[0]?.trim();
   const benefitLine = firstBenefit || "Ayurvedic Formulation";
   const subtitle = product.description?.split('.')[0] + '.' || "-";
   const parseRows = (value: string | null) => {
@@ -616,14 +616,15 @@ const ProductDetail = () => {
 
             <div className="space-y-6 lg:mt-2">
               <div className="space-y-4">
-                <m.div
-                  initial={{ opacity: 0, x: -20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  className="inline-flex items-center gap-2 px-3 py-1 bg-[#5A7A5C]/5 rounded-full border border-[#5A7A5C]/10"
-                >
-                  <div className="h-1.5 w-1.5 rounded-full bg-[#5A7A5C]" />
-                  <span className="text-[9px] uppercase tracking-[0.22em] text-[#5A7A5C] font-bold">{benefitLine}</span>
-                </m.div>
+                {product.productType && (
+                  <m.div
+                    initial={{ opacity: 0, x: -20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    className="inline-flex items-center gap-2 px-3 py-1 bg-[#5A7A5C]/5 rounded-full border border-[#5A7A5C]/10"
+                  >
+                    <span className="text-[9px] uppercase tracking-[0.22em] text-[#5A7A5C] font-bold">{product.productType}</span>
+                  </m.div>
+                )}
                 
                 <h1 className="text-3xl md:text-4xl lg:text-5xl font-display font-medium text-[#1A2E35] leading-tight tracking-tight">
                   {product.title}
@@ -674,7 +675,7 @@ const ProductDetail = () => {
                 </div>
 
                 <p className="text-base text-[#1A2E35]/60 font-sans-clean leading-relaxed max-w-lg">
-                   {subtitle}
+                   {benefitLine}
                 </p>
               </div>
 
@@ -789,7 +790,7 @@ const ProductDetail = () => {
                       activeTab === tab ? 'text-primary' : 'text-[#1A2E35]/30 hover:text-[#1A2E35]'
                     }`}
                   >
-                    {tab === 'shipping' ? 'Shipping & Returns' : tab === 'faq' ? 'FAQ' : tab}
+                    {tab === 'shipping' ? 'Shipping & Returns' : tab === 'faq' ? 'FAQ' : tab === 'additional' ? 'Benefits' : tab}
                     {activeTab === tab && (
                       <m.div 
                         layoutId="activeTab"
@@ -861,17 +862,13 @@ const ProductDetail = () => {
                     {/* Benefits Section */}
                     {getMetafieldValue('benefits') && (
                       <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-8">
-                        {getMetafieldValue('benefits').split(/[,\n]+/).map((benefit: string, i: number) => {
-                          const [title, ...descParts] = benefit.split(/\s*[—–-]\s*/);
+                        {getMetafieldValue('benefits').split(/\n+/).map((benefit: string, i: number) => {
                           return (
                             <div key={i} className="space-y-3">
                               <div className="h-10 w-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary mb-5">
-                                {getBenefitIcon(title)}
+                                {getBenefitIcon(benefit)}
                               </div>
-                              <h4 className="font-display font-bold text-base text-[#1A2E35] tracking-tight mb-2">{title}</h4>
-                              {descParts.length > 0 && (
-                                <p className="text-xs text-[#1A2E35]/60 font-sans-clean leading-loose italic">{descParts.join(' — ')}</p>
-                              )}
+                              <h4 className="font-sans-clean font-bold text-base text-[#1A2E35] tracking-tight leading-relaxed">{benefit}</h4>
                             </div>
                           );
                         })}
