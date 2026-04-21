@@ -40,6 +40,7 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 import { Image } from "@/components/ui/Image";
 import SEO from "@/components/SEO";
 import { SectionHeading } from "@/components/ui/SectionHeading";
+import QuickVariantSelect from "@/components/QuickVariantSelect";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -105,6 +106,11 @@ const ShopPage = () => {
   const [isAddressModalOpen, setIsAddressModalOpen] = useState(false);
   const [selectedProductForCheckout, setSelectedProductForCheckout] = useState<ShopifyProduct | null>(null);
   const [reviewsMap, setReviewsMap] = useState<Record<string, any[]>>({});
+
+  // Quick Variant Select state
+  const [isVariantModalOpen, setIsVariantModalOpen] = useState(false);
+  const [productForVariantSelect, setProductForVariantSelect] = useState<ShopifyProduct | null>(null);
+  const [variantAction, setVariantAction] = useState<'cart' | 'buy' | null>(null);
 
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
@@ -231,7 +237,31 @@ const ShopPage = () => {
   }, [products, selectedCategory, selectedPriceRange, inStockOnly, sortBy, searchQuery]);
 
   const handleAddToCart = async (product: ShopifyProduct) => {
-    const variant = product.node.variants.edges[0]?.node;
+    const variants = product.node.variants?.edges || [];
+    const hasMultipleVariants = variants.length > 1 && !(variants.length === 1 && variants[0].node.title === "Default Title");
+    
+    const getMetafieldValue = (keyMatch: string) => {
+      if (!product.node.metafields?.edges) return null;
+      const cleanMatch = keyMatch.toLowerCase().replace(/[^a-z0-9]/g, '');
+      return product.node.metafields.edges.find((e: any) => 
+        e.node.key.toLowerCase().replace(/[^a-z0-9]/g, '') === cleanMatch
+      )?.node.value;
+    };
+    
+    const metafieldOptionsCount = Math.max(
+      (getMetafieldValue("net_quantity") || getMetafieldValue("quantity") || "").split("/").filter(Boolean).length,
+      (getMetafieldValue("price") || getMetafieldValue("selling_price") || "").split("/").filter(Boolean).length
+    );
+    const usesMetafieldVariantOptions = !hasMultipleVariants && metafieldOptionsCount > 1;
+
+    if (hasMultipleVariants || usesMetafieldVariantOptions) {
+      setProductForVariantSelect(product);
+      setVariantAction('cart');
+      setIsVariantModalOpen(true);
+      return;
+    }
+
+    const variant = variants[0]?.node;
     if (!variant) return;
     const displayPrice = getProductDisplayPrice(product);
 
@@ -255,7 +285,31 @@ const ShopPage = () => {
   };
 
   const handleBuyNow = async (product: ShopifyProduct) => {
-    const variant = product.node.variants.edges[0]?.node;
+    const variants = product.node.variants?.edges || [];
+    const hasMultipleVariants = variants.length > 1 && !(variants.length === 1 && variants[0].node.title === "Default Title");
+    
+    const getMetafieldValue = (keyMatch: string) => {
+      if (!product.node.metafields?.edges) return null;
+      const cleanMatch = keyMatch.toLowerCase().replace(/[^a-z0-9]/g, '');
+      return product.node.metafields.edges.find((e: any) => 
+        e.node.key.toLowerCase().replace(/[^a-z0-9]/g, '') === cleanMatch
+      )?.node.value;
+    };
+    
+    const metafieldOptionsCount = Math.max(
+      (getMetafieldValue("net_quantity") || getMetafieldValue("quantity") || "").split("/").filter(Boolean).length,
+      (getMetafieldValue("price") || getMetafieldValue("selling_price") || "").split("/").filter(Boolean).length
+    );
+    const usesMetafieldVariantOptions = !hasMultipleVariants && metafieldOptionsCount > 1;
+
+    if (hasMultipleVariants || usesMetafieldVariantOptions) {
+      setProductForVariantSelect(product);
+      setVariantAction('buy');
+      setIsVariantModalOpen(true);
+      return;
+    }
+
+    const variant = variants[0]?.node;
     if (!variant) {
       console.error("No variant found for product:", product.node.title);
       toast.error("Product unavailable", { description: "This product has no available variants." });
@@ -282,24 +336,164 @@ const ShopPage = () => {
     setIsAddressModalOpen(true);
   };
 
+  const handleVariantActionAddToCart = async (product: ShopifyProduct, vIdx: number, mIdx: number, quantity: number) => {
+    const variants = product.node.variants?.edges || [];
+    const hasMultipleVariants = variants.length > 1 && !(variants.length === 1 && variants[0].node.title === "Default Title");
+    
+    const getMetafieldValue = (keyMatch: string) => {
+      if (!product.node.metafields?.edges) return null;
+      const cleanMatch = keyMatch.toLowerCase().replace(/[^a-z0-9]/g, '');
+      return product.node.metafields.edges.find((e: any) => 
+        e.node.key.toLowerCase().replace(/[^a-z0-9]/g, '') === cleanMatch
+      )?.node.value;
+    };
+
+    const metafieldNetQuantities = (getMetafieldValue("net_quantity") || getMetafieldValue("quantity") || "").split("/").filter(Boolean).map(s => s.trim());
+    const metafieldPrices = (getMetafieldValue("price") || getMetafieldValue("selling_price") || "").split("/").filter(Boolean).map(s => s.trim());
+    const usesMetafieldVariantOptions = !hasMultipleVariants && Math.max(metafieldNetQuantities.length, metafieldPrices.length) > 1;
+
+    const variant = variants[vIdx]?.node;
+    if (!variant) return;
+
+    let finalPrice = parseFloat(variant.price.amount);
+    let finalTitle = variant.title;
+    let finalOptions = variant.selectedOptions || [];
+
+    if (usesMetafieldVariantOptions) {
+      const mPriceRaw = metafieldPrices[mIdx] || metafieldPrices[0] || "";
+      const mPrice = Number((mPriceRaw || "").replace(/[^\d.]/g, ""));
+      if (Number.isFinite(mPrice) && mPrice > 0) finalPrice = mPrice;
+      
+      const mQty = metafieldNetQuantities[mIdx] || metafieldNetQuantities[0] || "";
+      if (mQty) {
+        finalTitle = mQty;
+        finalOptions = [{ name: "Net Quantity", value: mQty }];
+      }
+    }
+
+    setAddingId(product.node.id);
+    try {
+      await addItem({
+        product,
+        variantId: variant.id,
+        variantTitle: finalTitle,
+        price: {
+          amount: finalPrice.toFixed(2),
+          currencyCode: "INR",
+        },
+        quantity: quantity,
+        selectedOptions: finalOptions,
+      });
+      toast.success("Added to cart", { description: product.node.title, position: "top-center" });
+    } finally {
+      setAddingId(null);
+    }
+  };
+
+  const handleVariantActionBuyNow = async (product: ShopifyProduct, vIdx: number, mIdx: number, quantity: number) => {
+    const variants = product.node.variants?.edges || [];
+    const hasMultipleVariants = variants.length > 1 && !(variants.length === 1 && variants[0].node.title === "Default Title");
+    
+    const getMetafieldValue = (keyMatch: string) => {
+      if (!product.node.metafields?.edges) return null;
+      const cleanMatch = keyMatch.toLowerCase().replace(/[^a-z0-9]/g, '');
+      return product.node.metafields.edges.find((e: any) => 
+        e.node.key.toLowerCase().replace(/[^a-z0-9]/g, '') === cleanMatch
+      )?.node.value;
+    };
+
+    const metafieldNetQuantities = (getMetafieldValue("net_quantity") || getMetafieldValue("quantity") || "").split("/").filter(Boolean).map(s => s.trim());
+    const metafieldPrices = (getMetafieldValue("price") || getMetafieldValue("selling_price") || "").split("/").filter(Boolean).map(s => s.trim());
+    const usesMetafieldVariantOptions = !hasMultipleVariants && Math.max(metafieldNetQuantities.length, metafieldPrices.length) > 1;
+
+    const variant = variants[vIdx]?.node;
+    if (!variant) return;
+
+    let finalPrice = parseFloat(variant.price.amount);
+    let finalTitle = variant.title;
+
+    if (usesMetafieldVariantOptions) {
+      const mPriceRaw = metafieldPrices[mIdx] || metafieldPrices[0] || "";
+      const mPrice = Number((mPriceRaw || "").replace(/[^\d.]/g, ""));
+      if (Number.isFinite(mPrice) && mPrice > 0) finalPrice = mPrice;
+      
+      const mQty = metafieldNetQuantities[mIdx] || metafieldNetQuantities[0] || "";
+      if (mQty) finalTitle = mQty;
+    }
+
+    const session = getStoredSession();
+    if (!session?.user) {
+      toast.info("Please sign in to proceed with direct checkout");
+      const checkoutTitle =
+        finalTitle && finalTitle !== "Default Title"
+          ? `${product.node.title} - ${finalTitle}`
+          : product.node.title;
+      navigate(
+        `/login?redirect=buy_now&variantId=${encodeURIComponent(variant.id)}&quantity=${quantity}&unitPrice=${encodeURIComponent(
+          finalPrice.toString()
+        )}&title=${encodeURIComponent(checkoutTitle)}`
+      );
+      return;
+    }
+
+    // Actually, I'll store the variant info in the product object temporarily or use a separate state
+    const augmentedProduct = {
+      ...product,
+      selectedVariantIdx: vIdx,
+      selectedMetafieldIdx: mIdx,
+      selectedQuantity: quantity
+    };
+    setSelectedProductForCheckout(augmentedProduct as any);
+    setIsAddressModalOpen(true);
+  };
+
   const onAddressSelect = async (address: Address | null) => {
     if (!selectedProductForCheckout) return;
 
-    const variant = selectedProductForCheckout.node.variants.edges[0]?.node;
+    const vIdx = (selectedProductForCheckout as any).selectedVariantIdx ?? 0;
+    const mIdx = (selectedProductForCheckout as any).selectedMetafieldIdx ?? 0;
+    const quantity = (selectedProductForCheckout as any).selectedQuantity ?? 1;
+
+    const variant = selectedProductForCheckout.node.variants.edges[vIdx]?.node;
     if (!variant) return;
 
-    setBuyingId(selectedProductForCheckout.node.id); // Also set buyingId for card loader
+    setBuyingId(selectedProductForCheckout.node.id);
 
     try {
       const session = getStoredSession();
-      const displayPrice = getProductDisplayPrice(selectedProductForCheckout);
+      const hasMultipleVariants = selectedProductForCheckout.node.variants.edges.length > 1 && !(selectedProductForCheckout.node.variants.edges.length === 1 && selectedProductForCheckout.node.variants.edges[0].node.title === "Default Title");
+      
+      const getMetafieldValue = (keyMatch: string) => {
+        if (!selectedProductForCheckout.node.metafields?.edges) return null;
+        const cleanMatch = keyMatch.toLowerCase().replace(/[^a-z0-9]/g, '');
+        return selectedProductForCheckout.node.metafields.edges.find((e: any) => 
+          e.node.key.toLowerCase().replace(/[^a-z0-9]/g, '') === cleanMatch
+        )?.node.value;
+      };
+
+      const metafieldNetQuantities = (getMetafieldValue("net_quantity") || getMetafieldValue("quantity") || "").split("/").filter(Boolean).map(s => s.trim());
+      const metafieldPrices = (getMetafieldValue("price") || getMetafieldValue("selling_price") || "").split("/").filter(Boolean).map(s => s.trim());
+      const usesMetafieldVariantOptions = !hasMultipleVariants && Math.max(metafieldNetQuantities.length, metafieldPrices.length) > 1;
+
+      let finalPrice = parseFloat(variant.price.amount);
+      let finalTitle = variant.title;
+
+      if (usesMetafieldVariantOptions) {
+        const mPriceRaw = metafieldPrices[mIdx] || metafieldPrices[0] || "";
+        const mPrice = Number((mPriceRaw || "").replace(/[^\d.]/g, ""));
+        if (Number.isFinite(mPrice) && mPrice > 0) finalPrice = mPrice;
+        
+        const mQty = metafieldNetQuantities[mIdx] || metafieldNetQuantities[0] || "";
+        if (mQty) finalTitle = mQty;
+      }
+
       const lineItems = [{
         variantId: variant.id,
-        quantity: 1,
-        unitPrice: displayPrice.amount,
+        quantity: quantity,
+        unitPrice: finalPrice,
         title:
-          variant.title && variant.title !== "Default Title"
-            ? `${selectedProductForCheckout.node.title} - ${variant.title}`
+          finalTitle && finalTitle !== "Default Title"
+            ? `${selectedProductForCheckout.node.title} - ${finalTitle}`
             : selectedProductForCheckout.node.title,
       }];
       const result = await createHybridCheckout(lineItems, session?.user?.id, session?.user?.email, address);
@@ -719,6 +913,14 @@ const ShopPage = () => {
           />
         </Suspense>
       )}
+
+      <QuickVariantSelect
+        isOpen={isVariantModalOpen}
+        onClose={() => setIsVariantModalOpen(false)}
+        product={productForVariantSelect}
+        onAddToCart={handleVariantActionAddToCart}
+        onBuyNow={handleVariantActionBuyNow}
+      />
     </div>
   );
 };

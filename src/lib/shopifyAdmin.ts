@@ -370,6 +370,7 @@ const PRODUCT_BY_HANDLE_ADMIN_QUERY = `
         name
         values
       }
+      status
       metafields(first: 50) {
         edges {
           node {
@@ -429,6 +430,7 @@ const PRODUCTS_BY_IDS_ADMIN_QUERY = `
           name
           values
         }
+        status
         metafields(first: 20) {
           edges {
             node {

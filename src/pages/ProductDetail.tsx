@@ -332,6 +332,72 @@ const ProductDetail = () => {
     );
   }
 
+  // Handle non-active products with an aesthetic design
+  if (product.status && product.status !== 'ACTIVE') {
+    return (
+      <div className="min-h-screen bg-[#FDFBF7]">
+        <Header />
+        <main className="container mx-auto px-4 py-20 flex flex-col items-center justify-center text-center min-h-[70vh]">
+          <m.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6 }}
+            className="max-w-2xl"
+          >
+            <div className="w-24 h-24 bg-white rounded-full flex items-center justify-center mx-auto mb-8 shadow-sm border border-[#F2EDE4]">
+              <AlertCircle className="h-10 w-10 text-[#5A7A5C]/40" />
+            </div>
+            
+            <h1 className="text-4xl md:text-5xl font-display font-medium text-[#1A2E35] mb-6">
+              Formulation <span className="text-[#5A7A5C]">Unavailable</span>
+            </h1>
+            
+            <p className="text-lg text-[#1A2E35]/60 font-body leading-relaxed mb-10 max-w-lg mx-auto">
+              We're sorry, but "{product.title}" is currently not available for purchase. Our experts are working on refining this formulation to ensure the highest purity and precision.
+            </p>
+            
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+              <Link
+                to="/shop"
+                className="bg-[#1A2E35] text-white px-10 py-5 rounded-2xl font-bold uppercase tracking-widest text-xs hover:bg-[#5A7A5C] transition-all shadow-xl shadow-[#1A2E35]/10"
+              >
+                Explore Other Remedies
+              </Link>
+              <Link
+                to="/contact"
+                className="bg-white text-[#1A2E35] border-2 border-[#F2EDE4] px-10 py-5 rounded-2xl font-bold uppercase tracking-widest text-xs hover:bg-[#FDFBF7] transition-all"
+              >
+                Inquire About Availability
+              </Link>
+            </div>
+          </m.div>
+
+          <div className="mt-24 grid grid-cols-1 md:grid-cols-3 gap-12 w-full max-w-4xl opacity-40 grayscale pointer-events-none">
+              <div className="space-y-4">
+                <div className="h-14 w-14 bg-white rounded-full flex items-center justify-center mx-auto shadow-sm border border-[#F2EDE4]">
+                  <Package className="h-7 w-7 text-[#5A7A5C]" />
+                </div>
+                <h4 className="text-xs font-bold text-[#1A2E35] uppercase tracking-widest">Secure Shipping</h4>
+              </div>
+              <div className="space-y-4">
+                <div className="h-14 w-14 bg-white rounded-full flex items-center justify-center mx-auto shadow-sm border border-[#F2EDE4]">
+                  <ShieldCheck className="h-7 w-7 text-[#5A7A5C]" />
+                </div>
+                <h4 className="text-xs font-bold text-[#1A2E35] uppercase tracking-widest">Secure Payments</h4>
+              </div>
+              <div className="space-y-4">
+                <div className="h-14 w-14 bg-white rounded-full flex items-center justify-center mx-auto shadow-sm border border-[#F2EDE4]">
+                  <MessageCircle className="h-7 w-7 text-[#5A7A5C]" />
+                </div>
+                <h4 className="text-xs font-bold text-[#1A2E35] uppercase tracking-widest">Expert Guidance</h4>
+              </div>
+          </div>
+        </main>
+        <Footer />
+      </div>
+    );
+  }
+
 
   const getMetafieldValue = (keyMatch: string) => {
     if (!product?.metafields?.edges) return null;
@@ -430,11 +496,11 @@ const ProductDetail = () => {
 
   const handleAddToCart = async () => {
     if (!selectedVariant) return;
-    const cartPrice = hasValidMetafieldPrice
+    const cartPrice = (hasValidMetafieldPrice && usesMetafieldVariantOptions)
       ? { amount: selectedMetafieldPrice.toFixed(2), currencyCode: "INR" }
       : selectedVariant.price;
     const selectedFormatLabel =
-      selectedMetafieldNetQty ||
+      (usesMetafieldVariantOptions && selectedMetafieldNetQty) ||
       (selectedVariant?.title !== "Default Title" ? selectedVariant.title : "Default Title");
 
     await addItem({
@@ -458,11 +524,11 @@ const ProductDetail = () => {
     if (!session?.user) {
        toast.info("Please sign in to proceed with direct checkout");
       const encodedId = encodeURIComponent(selectedVariant.id);
-      const checkoutUnitPrice = hasValidMetafieldPrice
+      const checkoutUnitPrice = (hasValidMetafieldPrice && usesMetafieldVariantOptions)
         ? selectedMetafieldPrice
         : Number(selectedVariant?.price?.amount || 0);
       const checkoutTitle =
-        selectedMetafieldNetQty || (selectedVariant?.title !== "Default Title" ? selectedVariant?.title : "");
+        (usesMetafieldVariantOptions && selectedMetafieldNetQty) || (selectedVariant?.title !== "Default Title" ? selectedVariant?.title : "");
       navigate(
         `/login?redirect=buy_now&variantId=${encodedId}&quantity=${quantity}&unitPrice=${encodeURIComponent(
           checkoutUnitPrice.toString()
@@ -478,11 +544,11 @@ const ProductDetail = () => {
     setIsBuyingNow(true);
     
     try {
-      const checkoutUnitPrice = hasValidMetafieldPrice
+      const checkoutUnitPrice = (hasValidMetafieldPrice && usesMetafieldVariantOptions)
         ? selectedMetafieldPrice
         : Number(selectedVariant?.price?.amount || 0);
       const checkoutTitle =
-        selectedMetafieldNetQty || (selectedVariant?.title !== "Default Title" ? selectedVariant?.title : "");
+        (usesMetafieldVariantOptions && selectedMetafieldNetQty) || (selectedVariant?.title !== "Default Title" ? selectedVariant?.title : "");
       const lineItems = [{
         variantId: selectedVariant.id,
         quantity: quantity,
@@ -662,8 +728,8 @@ const ProductDetail = () => {
                 
                 <div className="flex items-baseline gap-3 pt-2">
                   <span className="text-3xl font-sans-clean font-bold text-[#C5A059]">
-                    {hasValidMetafieldPrice ? '₹' : (selectedVariant?.price.currencyCode === 'INR' ? '₹' : selectedVariant?.price.currencyCode)}{' '}
-                    {hasValidMetafieldPrice ? selectedMetafieldPrice.toFixed(2) : parseFloat(selectedVariant?.price.amount || "0").toFixed(2)}
+                    {(hasValidMetafieldPrice && usesMetafieldVariantOptions) ? '₹' : (selectedVariant?.price.currencyCode === 'INR' ? '₹' : selectedVariant?.price.currencyCode)}{' '}
+                    {(hasValidMetafieldPrice && usesMetafieldVariantOptions) ? selectedMetafieldPrice.toFixed(2) : parseFloat(selectedVariant?.price.amount || "0").toFixed(2)}
                   </span>
                   
                   {selectedVariant?.compareAtPrice && parseFloat(selectedVariant.compareAtPrice.amount) > parseFloat(selectedVariant.price.amount) && (
@@ -1244,8 +1310,8 @@ const ProductDetail = () => {
                 <div className="h-12 w-12 bg-white rounded-full flex items-center justify-center mx-auto shadow-sm border border-[#F2EDE4]">
                   <Package className="h-6 w-6 text-primary" />
                 </div>
-                <h4 className="text-sm font-bold text-[#1A2E35] uppercase tracking-widest">Free Shipping</h4>
-                <p className="text-[11px] text-[#1A2E35]/40 uppercase tracking-widest">On orders above ₹999</p>
+                <h4 className="text-sm font-bold text-[#1A2E35] uppercase tracking-widest">Secure Shipping</h4>
+                <p className="text-[11px] text-[#1A2E35]/40 uppercase tracking-widest">Safe & Reliable Delivery</p>
               </div>
               <div className="space-y-3">
                 <div className="h-12 w-12 bg-white rounded-full flex items-center justify-center mx-auto shadow-sm border border-[#F2EDE4]">

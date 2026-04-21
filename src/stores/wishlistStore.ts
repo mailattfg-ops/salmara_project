@@ -19,7 +19,7 @@ interface WishlistState {
   isLoading: boolean;
   syncWithShopify: () => Promise<void>;
   addItem: (product: ShopifyProduct, variantId: string) => Promise<void>;
-  removeItem: (variantId: string) => Promise<void>;
+  removeItem: (variantId: string, silent?: boolean) => Promise<void>;
   toggleItem: (product: ShopifyProduct, variantId: string) => Promise<void>;
   isInWishlist: (variantId: string) => boolean;
   clearWishlist: () => Promise<void>;
@@ -82,7 +82,7 @@ export const useWishlistStore = create<WishlistState>()(
         }
       },
       
-      removeItem: async (variantId) => {
+      removeItem: async (variantId, silent = false) => {
         const session = getStoredSession();
         if (!session?.user?.id) return;
 
@@ -90,7 +90,7 @@ export const useWishlistStore = create<WishlistState>()(
         const newItems = items.filter(item => item.variantId !== variantId);
         set({ items: newItems });
         await updateCustomerWishlist(session.user.id, newItems.map(i => i.variantId));
-        toast.info("Removed from wishlist");
+        if (!silent) toast.info("Removed from wishlist");
       },
       
       toggleItem: async (product, variantId) => {

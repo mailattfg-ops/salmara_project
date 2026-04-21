@@ -4,6 +4,8 @@ import { Link } from "react-router-dom";
 import React, { memo } from "react";
 import { Image } from "@/components/ui/Image";
 import { type ShopifyProduct } from "@/lib/shopifyAdmin";
+import { useState } from "react";
+import QuickVariantSelect from "./QuickVariantSelect";
 
 interface ProductCardProps {
   product: ShopifyProduct;
@@ -28,6 +30,9 @@ const ProductCard = ({
   onBuyNow,
   onToggleWishlist,
 }: ProductCardProps) => {
+  const [isVariantModalOpen, setIsVariantModalOpen] = useState(false);
+  const [variantAction, setVariantAction] = useState<'cart' | 'buy' | null>(null);
+
   const variant = product.node.variants.edges[0]?.node;
   const image = product.node.images.edges[0]?.node;
   const price = variant?.price;
@@ -192,7 +197,31 @@ const ProductCard = ({
         ) : (
           <div className="flex gap-2">
             <button
-              onClick={() => onAddToCart(product)}
+              onClick={() => {
+                const variants = product.node.variants?.edges || [];
+                const hasMultipleVariants = variants.length > 1 && !(variants.length === 1 && variants[0].node.title === "Default Title");
+                
+                const getMetafieldValue = (keyMatch: string) => {
+                  if (!product.node.metafields?.edges) return null;
+                  const cleanMatch = keyMatch.toLowerCase().replace(/[^a-z0-9]/g, '');
+                  return product.node.metafields.edges.find((e: any) => 
+                    e.node.key.toLowerCase().replace(/[^a-z0-9]/g, '') === cleanMatch
+                  )?.node.value;
+                };
+                
+                const metafieldOptionsCount = Math.max(
+                  (getMetafieldValue("net_quantity") || getMetafieldValue("quantity") || "").split("/").filter(Boolean).length,
+                  (getMetafieldValue("price") || getMetafieldValue("selling_price") || "").split("/").filter(Boolean).length
+                );
+                const usesMetafieldVariantOptions = !hasMultipleVariants && metafieldOptionsCount > 1;
+
+                if (hasMultipleVariants || usesMetafieldVariantOptions) {
+                  setVariantAction('cart');
+                  setIsVariantModalOpen(true);
+                } else {
+                  onAddToCart(product);
+                }
+              }}
               disabled={addingId === product.node.id}
               className="flex-1 border border-[#1A2E35]/40 text-[#1A2E35] py-3 rounded-xl font-sans-clean text-[10px] font-bold uppercase tracking-widest hover:bg-[#FDFBF7] hover:border-[#5A7A5C]/40 transition-all flex items-center justify-center gap-2 group/btn"
             >
@@ -207,7 +236,30 @@ const ProductCard = ({
               onClick={(e) => {
                 e.preventDefault();
                 e.stopPropagation();
-                onBuyNow(product);
+                
+                const variants = product.node.variants?.edges || [];
+                const hasMultipleVariants = variants.length > 1 && !(variants.length === 1 && variants[0].node.title === "Default Title");
+                
+                const getMetafieldValue = (keyMatch: string) => {
+                  if (!product.node.metafields?.edges) return null;
+                  const cleanMatch = keyMatch.toLowerCase().replace(/[^a-z0-9]/g, '');
+                  return product.node.metafields.edges.find((e: any) => 
+                    e.node.key.toLowerCase().replace(/[^a-z0-9]/g, '') === cleanMatch
+                  )?.node.value;
+                };
+                
+                const metafieldOptionsCount = Math.max(
+                  (getMetafieldValue("net_quantity") || getMetafieldValue("quantity") || "").split("/").filter(Boolean).length,
+                  (getMetafieldValue("price") || getMetafieldValue("selling_price") || "").split("/").filter(Boolean).length
+                );
+                const usesMetafieldVariantOptions = !hasMultipleVariants && metafieldOptionsCount > 1;
+
+                if (hasMultipleVariants || usesMetafieldVariantOptions) {
+                  setVariantAction('buy');
+                  setIsVariantModalOpen(true);
+                } else {
+                  onBuyNow(product);
+                }
               }}
               disabled={buyingId === product.node.id}
               className="flex-1 bg-[#1A2E35] text-white py-3 rounded-xl font-sans-clean text-[10px] font-bold uppercase tracking-widest hover:bg-[#5A7A5C] transition-all disabled:opacity-50 flex items-center justify-center gap-2 shadow-lg shadow-[#1A2E35]/10"
@@ -218,6 +270,33 @@ const ProductCard = ({
           </div>
         )}
       </div>
+      <QuickVariantSelect
+        isOpen={isVariantModalOpen}
+        onClose={() => setIsVariantModalOpen(false)}
+        product={product}
+        onAddToCart={async (prod, vIdx, mIdx, qty) => {
+          // Augmented product to pass selection to parent if needed
+          const variant = prod.node.variants.edges[vIdx]?.node;
+          if (!variant) return;
+          
+          const augmentedProduct = {
+            ...prod,
+            selectedVariantIdx: vIdx,
+            selectedMetafieldIdx: mIdx,
+            selectedQuantity: qty
+          };
+          await onAddToCart(augmentedProduct as any);
+        }}
+        onBuyNow={async (prod, vIdx, mIdx, qty) => {
+          const augmentedProduct = {
+            ...prod,
+            selectedVariantIdx: vIdx,
+            selectedMetafieldIdx: mIdx,
+            selectedQuantity: qty
+          };
+          await onBuyNow(augmentedProduct as any);
+        }}
+      />
     </m.div>
   );
 };
