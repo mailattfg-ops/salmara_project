@@ -77,6 +77,8 @@ const WishlistPage = () => {
         selectedOptions: variant.selectedOptions || [],
       });
       toast.success("Added to cart", { description: productNode.title });
+      // Remove from wishlist after adding to cart
+      await removeItem(item.variantId, true);
     } catch (error) {
       toast.error("Failed to add to cart");
     }
