@@ -1244,8 +1244,8 @@ const ProductDetail = () => {
                 <div className="h-12 w-12 bg-white rounded-full flex items-center justify-center mx-auto shadow-sm border border-[#F2EDE4]">
                   <Package className="h-6 w-6 text-primary" />
                 </div>
-                <h4 className="text-sm font-bold text-[#1A2E35] uppercase tracking-widest">Free Shipping</h4>
-                <p className="text-[11px] text-[#1A2E35]/40 uppercase tracking-widest">On orders above ₹999</p>
+                <h4 className="text-sm font-bold text-[#1A2E35] uppercase tracking-widest">Secure Shipping</h4>
+                <p className="text-[11px] text-[#1A2E35]/40 uppercase tracking-widest">Safe & Reliable Delivery</p>
               </div>
               <div className="space-y-3">
                 <div className="h-12 w-12 bg-white rounded-full flex items-center justify-center mx-auto shadow-sm border border-[#F2EDE4]">
