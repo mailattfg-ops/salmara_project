@@ -496,11 +496,11 @@ const ProductDetail = () => {
 
   const handleAddToCart = async () => {
     if (!selectedVariant) return;
-    const cartPrice = hasValidMetafieldPrice
+    const cartPrice = (hasValidMetafieldPrice && usesMetafieldVariantOptions)
       ? { amount: selectedMetafieldPrice.toFixed(2), currencyCode: "INR" }
       : selectedVariant.price;
     const selectedFormatLabel =
-      selectedMetafieldNetQty ||
+      (usesMetafieldVariantOptions && selectedMetafieldNetQty) ||
       (selectedVariant?.title !== "Default Title" ? selectedVariant.title : "Default Title");
 
     await addItem({
@@ -524,11 +524,11 @@ const ProductDetail = () => {
     if (!session?.user) {
        toast.info("Please sign in to proceed with direct checkout");
       const encodedId = encodeURIComponent(selectedVariant.id);
-      const checkoutUnitPrice = hasValidMetafieldPrice
+      const checkoutUnitPrice = (hasValidMetafieldPrice && usesMetafieldVariantOptions)
         ? selectedMetafieldPrice
         : Number(selectedVariant?.price?.amount || 0);
       const checkoutTitle =
-        selectedMetafieldNetQty || (selectedVariant?.title !== "Default Title" ? selectedVariant?.title : "");
+        (usesMetafieldVariantOptions && selectedMetafieldNetQty) || (selectedVariant?.title !== "Default Title" ? selectedVariant?.title : "");
       navigate(
         `/login?redirect=buy_now&variantId=${encodedId}&quantity=${quantity}&unitPrice=${encodeURIComponent(
           checkoutUnitPrice.toString()
@@ -544,11 +544,11 @@ const ProductDetail = () => {
     setIsBuyingNow(true);
     
     try {
-      const checkoutUnitPrice = hasValidMetafieldPrice
+      const checkoutUnitPrice = (hasValidMetafieldPrice && usesMetafieldVariantOptions)
         ? selectedMetafieldPrice
         : Number(selectedVariant?.price?.amount || 0);
       const checkoutTitle =
-        selectedMetafieldNetQty || (selectedVariant?.title !== "Default Title" ? selectedVariant?.title : "");
+        (usesMetafieldVariantOptions && selectedMetafieldNetQty) || (selectedVariant?.title !== "Default Title" ? selectedVariant?.title : "");
       const lineItems = [{
         variantId: selectedVariant.id,
         quantity: quantity,
@@ -728,8 +728,8 @@ const ProductDetail = () => {
                 
                 <div className="flex items-baseline gap-3 pt-2">
                   <span className="text-3xl font-sans-clean font-bold text-[#C5A059]">
-                    {hasValidMetafieldPrice ? '₹' : (selectedVariant?.price.currencyCode === 'INR' ? '₹' : selectedVariant?.price.currencyCode)}{' '}
-                    {hasValidMetafieldPrice ? selectedMetafieldPrice.toFixed(2) : parseFloat(selectedVariant?.price.amount || "0").toFixed(2)}
+                    {(hasValidMetafieldPrice && usesMetafieldVariantOptions) ? '₹' : (selectedVariant?.price.currencyCode === 'INR' ? '₹' : selectedVariant?.price.currencyCode)}{' '}
+                    {(hasValidMetafieldPrice && usesMetafieldVariantOptions) ? selectedMetafieldPrice.toFixed(2) : parseFloat(selectedVariant?.price.amount || "0").toFixed(2)}
                   </span>
                   
                   {selectedVariant?.compareAtPrice && parseFloat(selectedVariant.compareAtPrice.amount) > parseFloat(selectedVariant.price.amount) && (
