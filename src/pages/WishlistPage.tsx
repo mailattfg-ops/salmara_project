@@ -10,9 +10,14 @@ import { toast } from "sonner";
 import { Image } from "@/components/ui/Image";
 import SEO from "@/components/SEO";
 import { SectionHeading } from "@/components/ui/SectionHeading";
+import QuickVariantSelect from "@/components/QuickVariantSelect";
+import { type ShopifyProduct } from "@/lib/shopifyAdmin";
 
-import { getStoredSession, fetchBulkReviews } from "@/lib/shopifyAdmin";
+import { getStoredSession, fetchBulkReviews, createHybridCheckout, type Address } from "@/lib/shopifyAdmin";
 import { useNavigate } from "react-router-dom";
+import { lazy, Suspense } from "react";
+
+const AddressSelectionModal = lazy(() => import("@/components/AddressSelectionModal"));
 
 const WishlistPage = () => {
   const { items, removeItem, clearWishlist, syncWithShopify, isLoading } = useWishlistStore();
@@ -20,6 +25,16 @@ const WishlistPage = () => {
   const navigate = useNavigate();
   const [reviewsMap, setReviewsMap] = useState<Record<string, any[]>>({});
   const [isReviewsLoading, setIsReviewsLoading] = useState(false);
+
+  // Checkout states
+  const [isAddressModalOpen, setIsAddressModalOpen] = useState(false);
+  const [selectedProductForCheckout, setSelectedProductForCheckout] = useState<ShopifyProduct | null>(null);
+  const [buyingId, setBuyingId] = useState<string | null>(null);
+
+  // Quick Variant Select state
+  const [isVariantModalOpen, setIsVariantModalOpen] = useState(false);
+  const [productForVariantSelect, setProductForVariantSelect] = useState<ShopifyProduct | null>(null);
+  const [wishlistItemForRemoval, setWishlistItemForRemoval] = useState<any>(null);
 
   useEffect(() => {
     const session = getStoredSession();
@@ -63,8 +78,34 @@ const WishlistPage = () => {
   }, [items]);
 
   const handleAddToCart = async (item: any) => {
-    const productNode = item.product?.node || item.product; // Support both structures
-    const variant = productNode?.variants?.edges[0]?.node;
+    const productNode = item.product?.node || item.product;
+    if (!productNode) return;
+    
+    const variants = productNode.variants?.edges || [];
+    const hasMultipleVariants = variants.length > 1 && !(variants.length === 1 && variants[0].node.title === "Default Title");
+    
+    const getMetafieldValue = (keyMatch: string) => {
+      if (!productNode.metafields?.edges) return null;
+      const cleanMatch = keyMatch.toLowerCase().replace(/[^a-z0-9]/g, '');
+      return productNode.metafields.edges.find((e: any) => 
+        e.node.key.toLowerCase().replace(/[^a-z0-9]/g, '') === cleanMatch
+      )?.node.value;
+    };
+    
+    const metafieldOptionsCount = Math.max(
+      (getMetafieldValue("net_quantity") || getMetafieldValue("quantity") || "").split("/").filter(Boolean).length,
+      (getMetafieldValue("price") || getMetafieldValue("selling_price") || "").split("/").filter(Boolean).length
+    );
+    const usesMetafieldVariantOptions = !hasMultipleVariants && metafieldOptionsCount > 1;
+
+    if (hasMultipleVariants || usesMetafieldVariantOptions) {
+      setProductForVariantSelect({ node: productNode } as any);
+      setWishlistItemForRemoval(item);
+      setIsVariantModalOpen(true);
+      return;
+    }
+
+    const variant = variants[0]?.node;
     if (!variant) return;
 
     try {
@@ -77,10 +118,132 @@ const WishlistPage = () => {
         selectedOptions: variant.selectedOptions || [],
       });
       toast.success("Added to cart", { description: productNode.title });
-      // Remove from wishlist after adding to cart
       await removeItem(item.variantId, true);
     } catch (error) {
       toast.error("Failed to add to cart");
+    }
+  };
+
+  const handleVariantActionAddToCart = async (product: ShopifyProduct, vIdx: number, mIdx: number, quantity: number) => {
+    const productNode = product.node;
+    const variants = productNode.variants?.edges || [];
+    const hasMultipleVariants = variants.length > 1 && !(variants.length === 1 && variants[0].node.title === "Default Title");
+    
+    const getMetafieldValue = (keyMatch: string) => {
+      if (!productNode.metafields?.edges) return null;
+      const cleanMatch = keyMatch.toLowerCase().replace(/[^a-z0-9]/g, '');
+      return productNode.metafields.edges.find((e: any) => 
+        e.node.key.toLowerCase().replace(/[^a-z0-9]/g, '') === cleanMatch
+      )?.node.value;
+    };
+
+    const metafieldNetQuantities = (getMetafieldValue("net_quantity") || getMetafieldValue("quantity") || "").split("/").filter(Boolean).map(s => s.trim());
+    const metafieldPrices = (getMetafieldValue("price") || getMetafieldValue("selling_price") || "").split("/").filter(Boolean).map(s => s.trim());
+    const usesMetafieldVariantOptions = !hasMultipleVariants && Math.max(metafieldNetQuantities.length, metafieldPrices.length) > 1;
+
+    const variant = variants[vIdx]?.node;
+    if (!variant) return;
+
+    let finalPrice = parseFloat(variant.price.amount);
+    let finalTitle = variant.title;
+    let finalOptions = variant.selectedOptions || [];
+
+    if (usesMetafieldVariantOptions) {
+      const mPriceRaw = metafieldPrices[mIdx] || metafieldPrices[0] || "";
+      const mPrice = Number((mPriceRaw || "").replace(/[^\d.]/g, ""));
+      if (Number.isFinite(mPrice) && mPrice > 0) finalPrice = mPrice;
+      
+      const mQty = metafieldNetQuantities[mIdx] || metafieldNetQuantities[0] || "";
+      if (mQty) {
+        finalTitle = mQty;
+        finalOptions = [{ name: "Net Quantity", value: mQty }];
+      }
+    }
+
+    try {
+      await addItem({
+        product,
+        variantId: variant.id,
+        variantTitle: finalTitle,
+        price: {
+          amount: finalPrice.toFixed(2),
+          currencyCode: "INR",
+        },
+        quantity: quantity,
+        selectedOptions: finalOptions,
+      });
+      toast.success("Added to cart", { description: productNode.title });
+      if (wishlistItemForRemoval) {
+        await removeItem(wishlistItemForRemoval.variantId, true);
+      }
+    } catch (error) {
+      toast.error("Failed to add to cart");
+    }
+  };
+
+  const onAddressSelect = async (address: Address | null) => {
+    if (!selectedProductForCheckout) return;
+
+    const vIdx = (selectedProductForCheckout as any).selectedVariantIdx ?? 0;
+    const mIdx = (selectedProductForCheckout as any).selectedMetafieldIdx ?? 0;
+    const qty = (selectedProductForCheckout as any).selectedQuantity ?? 1;
+
+    const productNode = selectedProductForCheckout.node;
+    const variant = productNode.variants.edges[vIdx]?.node;
+    if (!variant) return;
+
+    setBuyingId(selectedProductForCheckout.node.id);
+
+    try {
+      const session = getStoredSession();
+      const hasMultipleVariants = productNode.variants.edges.length > 1 && !(productNode.variants.edges.length === 1 && productNode.variants.edges[0].node.title === "Default Title");
+      
+      const getMetafieldValue = (keyMatch: string) => {
+        if (!productNode.metafields?.edges) return null;
+        const cleanMatch = keyMatch.toLowerCase().replace(/[^a-z0-9]/g, '');
+        return productNode.metafields.edges.find((e: any) => 
+          e.node.key.toLowerCase().replace(/[^a-z0-9]/g, '') === cleanMatch
+        )?.node.value;
+      };
+
+      const metafieldNetQuantities = (getMetafieldValue("net_quantity") || getMetafieldValue("quantity") || "").split("/").filter(Boolean).map(s => s.trim());
+      const metafieldPrices = (getMetafieldValue("price") || getMetafieldValue("selling_price") || "").split("/").filter(Boolean).map(s => s.trim());
+      const usesMetafieldVariantOptions = !hasMultipleVariants && Math.max(metafieldNetQuantities.length, metafieldPrices.length) > 1;
+
+      let finalPrice = parseFloat(variant.price.amount);
+      let finalTitle = variant.title;
+
+      if (usesMetafieldVariantOptions) {
+        const mPriceRaw = metafieldPrices[mIdx] || metafieldPrices[0] || "";
+        const mPrice = Number((mPriceRaw || "").replace(/[^\d.]/g, ""));
+        if (Number.isFinite(mPrice) && mPrice > 0) finalPrice = mPrice;
+        
+        const mQty = metafieldNetQuantities[mIdx] || metafieldNetQuantities[0] || "";
+        if (mQty) finalTitle = mQty;
+      }
+
+      const lineItems = [{
+        variantId: variant.id,
+        quantity: qty,
+        unitPrice: finalPrice,
+        title:
+          finalTitle && finalTitle !== "Default Title"
+            ? `${productNode.title} - ${finalTitle}`
+            : productNode.title,
+      }];
+      const result = await createHybridCheckout(lineItems, session?.user?.id, session?.user?.email, address);
+
+      if (result.success && result.checkoutUrl) {
+        window.location.href = result.checkoutUrl;
+      } else {
+        toast.error("Checkout failed. Please try again.");
+        setBuyingId(null);
+        setIsAddressModalOpen(false);
+      }
+    } catch (error: any) {
+      toast.error("An unexpected error occurred");
+      setBuyingId(null);
+      setIsAddressModalOpen(false);
     }
   };
 
@@ -267,6 +430,67 @@ const WishlistPage = () => {
       </main>
       
       <Footer />
+
+      <QuickVariantSelect
+        isOpen={isVariantModalOpen}
+        onClose={() => setIsVariantModalOpen(false)}
+        product={productForVariantSelect}
+        onAddToCart={handleVariantActionAddToCart}
+        onBuyNow={async (prod, vIdx, mIdx, qty) => {
+           // Handle Buy Now from Wishlist if needed
+           const variant = prod.node.variants.edges[vIdx]?.node;
+           if (!variant) return;
+           
+           const hasMultipleVariants = prod.node.variants.edges.length > 1 && !(prod.node.variants.edges.length === 1 && prod.node.variants.edges[0].node.title === "Default Title");
+           const getMetafieldValue = (keyMatch: string) => {
+              if (!prod.node.metafields?.edges) return null;
+              const cleanMatch = keyMatch.toLowerCase().replace(/[^a-z0-9]/g, '');
+              return prod.node.metafields.edges.find((e: any) => e.node.key.toLowerCase().replace(/[^a-z0-9]/g, '') === cleanMatch)?.node.value;
+            };
+            const metafieldNetQuantities = (getMetafieldValue("net_quantity") || getMetafieldValue("quantity") || "").split("/").filter(Boolean).map(s => s.trim());
+            const metafieldPrices = (getMetafieldValue("price") || getMetafieldValue("selling_price") || "").split("/").filter(Boolean).map(s => s.trim());
+            const usesMetafieldVariantOptions = !hasMultipleVariants && Math.max(metafieldNetQuantities.length, metafieldPrices.length) > 1;
+
+            let finalPrice = parseFloat(variant.price.amount);
+            let finalTitle = variant.title;
+            if (usesMetafieldVariantOptions) {
+              const mPriceRaw = metafieldPrices[mIdx] || metafieldPrices[0] || "";
+              const mPrice = Number((mPriceRaw || "").replace(/[^\d.]/g, ""));
+              if (Number.isFinite(mPrice) && mPrice > 0) finalPrice = mPrice;
+              const mQty = metafieldNetQuantities[mIdx] || metafieldNetQuantities[0] || "";
+              if (mQty) finalTitle = mQty;
+            }
+
+           const checkoutTitle = finalTitle && finalTitle !== "Default Title" ? `${prod.node.title} - ${finalTitle}` : prod.node.title;
+           
+           const session = getStoredSession();
+           if (!session?.user) {
+             window.location.href = `/login?redirect=buy_now&variantId=${encodeURIComponent(variant.id)}&quantity=${qty}&unitPrice=${encodeURIComponent(finalPrice.toString())}&title=${encodeURIComponent(checkoutTitle)}`;
+             return;
+           }
+
+           const augmentedProduct = {
+             ...prod,
+             selectedVariantIdx: vIdx,
+             selectedMetafieldIdx: mIdx,
+             selectedQuantity: qty
+           };
+           setSelectedProductForCheckout(augmentedProduct as any);
+           setIsAddressModalOpen(true);
+        }}
+      />
+      {/* Address Selection Modal */}
+      {selectedProductForCheckout && (
+        <Suspense fallback={null}>
+          <AddressSelectionModal
+            isOpen={isAddressModalOpen}
+            onClose={() => setIsAddressModalOpen(false)}
+            customerId={getStoredSession()?.user?.id || ""}
+            onSelect={onAddressSelect}
+            isProcessing={!!buyingId}
+          />
+        </Suspense>
+      )}
     </div>
   );
 };
