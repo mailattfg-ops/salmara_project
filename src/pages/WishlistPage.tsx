@@ -205,39 +205,44 @@ const WishlistPage = () => {
                         )}
                         </div>
 
-                        <div className="flex items-center gap-2 mb-8">
-                          <div className="flex items-center gap-1">
-                            <div className="flex">
-                              {[...Array(5)].map((_, i) => {
-                                const reviews = reviewsMap[productNode.id] || [];
-                                const avgRating = reviews.length > 0 
-                                  ? reviews.reduce((acc: number, r: any) => acc + r.rating, 0) / reviews.length 
-                                  : 4.9;
-                                return (
-                                  <Star 
-                                    key={i} 
-                                    className={`h-3 w-3 ${i < Math.floor(avgRating) ? 'fill-[#C5A059] text-[#C5A059]' : 'text-[#C5A059]/20'}`} 
-                                  />
-                                );
-                              })}
-                            </div>
-                            <span className="text-[10px] font-bold text-[#1A2E35] font-[Inter]">
-                              {(() => {
-                                const reviews = reviewsMap[productNode.id] || [];
-                                const avgRating = reviews.length > 0 
-                                  ? (reviews.reduce((acc: number, r: any) => acc + r.rating, 0) / reviews.length).toFixed(1)
-                                  : "4.9";
-                                return avgRating;
-                              })()}
-                            </span>
-                          </div>
-                          <span className="text-[10px] font-bold text-[#1A2E35]/30 uppercase tracking-widest leading-none">
-                            {(() => {
-                              const reviews = reviewsMap[productNode.id] || [];
-                              const count = reviews.length > 0 ? reviews.length : 248;
-                              return `(${count})`;
-                            })()}
-                          </span>
+                        <div className="flex items-center gap-2 mb-8 min-h-[12px]">
+                          {(() => {
+                            const reviews = reviewsMap[productNode.id] || [];
+                            const hasReviews = reviews.length > 0;
+                            const avgRating = hasReviews 
+                              ? reviews.reduce((acc: number, r: any) => acc + (Number(r.rating) || 0), 0) / reviews.length 
+                              : 0;
+                            const count = hasReviews ? reviews.length : 0;
+
+                            if (!hasReviews) {
+                              return (
+                                <span className="text-[10px] font-bold text-[#1A2E35]/30 uppercase tracking-widest leading-none">
+                                  No reviews yet
+                                </span>
+                              );
+                            }
+
+                            return (
+                              <>
+                                <div className="flex items-center gap-1">
+                                  <div className="flex">
+                                    {[...Array(5)].map((_, i) => (
+                                      <Star 
+                                        key={i} 
+                                        className={`h-3 w-3 ${i < Math.round(avgRating) ? 'fill-[#C5A059] text-[#C5A059]' : 'text-[#C5A059]/20'}`} 
+                                      />
+                                    ))}
+                                  </div>
+                                  <span className="text-[10px] font-bold text-[#1A2E35] font-[Inter]">
+                                    {avgRating.toFixed(1)}
+                                  </span>
+                                </div>
+                                <span className="text-[10px] font-bold text-[#1A2E35]/30 uppercase tracking-widest leading-none">
+                                  ({count})
+                                </span>
+                              </>
+                            );
+                          })()}
                         </div>
 
                         <div className="flex gap-3">
