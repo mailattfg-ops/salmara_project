@@ -352,62 +352,64 @@ const WishlistPage = () => {
                       </Link>
 
                       <div className="px-3">
-                        <div className="flex justify-between items-start mb-4">
-                          <div>
-                            <Link to={`/product/${productNode.handle}`}>
-                              <h3 className="text-xl font-display font-medium text-[#1A2E35] hover:text-[#5A7A5C] transition-colors mb-1">
-                                {productNode.title}
-                              </h3>
-                            </Link>
-                            <p className="text-[10px] font-bold uppercase tracking-widest text-[#5A7A5C] opacity-60">
-                              {productNode.productType}
-                            </p>
-                          </div>
-                        {variant && (
-                          <span className="text-lg font-medium text-[#1A2E35] font-[Inter]">
-                            ₹{parseFloat(variant.price.amount).toFixed(2)}
-                          </span>
-                        )}
+                        <div className="flex justify-between items-start mb-1">
+                          <Link to={`/product/${productNode.handle}`}>
+                            <h3 className="text-lg font-display font-medium text-[#1A2E35] hover:text-[#5A7A5C] transition-colors line-clamp-1">
+                              {productNode.title}
+                            </h3>
+                          </Link>
+                          {variant && (
+                            <span className="text-lg font-sans-clean font-bold text-[#C5A059] ml-2 whitespace-nowrap">
+                              ₹{parseFloat(variant.price.amount).toFixed(2)}
+                            </span>
+                          )}
                         </div>
 
-                        <div className="flex items-center gap-2 mb-8 min-h-[12px]">
-                          {(() => {
-                            const reviews = reviewsMap[productNode.id] || [];
-                            const hasReviews = reviews.length > 0;
-                            const avgRating = hasReviews 
-                              ? reviews.reduce((acc: number, r: any) => acc + (Number(r.rating) || 0), 0) / reviews.length 
-                              : 0;
-                            const count = hasReviews ? reviews.length : 0;
+                        <div className="flex justify-between items-center mb-8 min-h-[12px]">
+                          <div className="flex items-center gap-2">
+                            {(() => {
+                              const reviews = reviewsMap[productNode.id] || [];
+                              const hasReviews = reviews.length > 0;
+                              const avgRating = hasReviews 
+                                ? reviews.reduce((acc: number, r: any) => acc + (Number(r.rating) || 0), 0) / reviews.length 
+                                : 0;
+                              const count = hasReviews ? reviews.length : 0;
 
-                            if (!hasReviews) {
-                              return (
-                                <span className="text-[10px] font-bold text-[#1A2E35]/30 uppercase tracking-widest leading-none">
-                                  No reviews yet
-                                </span>
-                              );
-                            }
-
-                            return (
-                              <>
-                                <div className="flex items-center gap-1">
-                                  <div className="flex">
-                                    {[...Array(5)].map((_, i) => (
-                                      <Star 
-                                        key={i} 
-                                        className={`h-3 w-3 ${i < Math.round(avgRating) ? 'fill-[#C5A059] text-[#C5A059]' : 'text-[#C5A059]/20'}`} 
-                                      />
-                                    ))}
-                                  </div>
-                                  <span className="text-[10px] font-bold text-[#1A2E35] font-[Inter]">
-                                    {avgRating.toFixed(1)}
+                              if (!hasReviews) {
+                                return (
+                                  <span className="text-[10px] font-bold text-[#1A2E35]/30 uppercase tracking-widest leading-none">
+                                    No reviews yet
                                   </span>
-                                </div>
-                                <span className="text-[10px] font-bold text-[#1A2E35]/30 uppercase tracking-widest leading-none">
-                                  ({count})
-                                </span>
-                              </>
-                            );
-                          })()}
+                                );
+                              }
+
+                              return (
+                                <>
+                                  <div className="flex items-center gap-1">
+                                    <div className="flex">
+                                      {[...Array(5)].map((_, i) => (
+                                        <Star 
+                                          key={i} 
+                                          className={`h-3 w-3 ${i < Math.round(avgRating) ? 'fill-[#C5A059] text-[#C5A059]' : 'text-[#C5A059]/20'}`} 
+                                        />
+                                      ))}
+                                    </div>
+                                    <span className="text-[10px] font-bold text-[#1A2E35] font-[Inter]">
+                                      {avgRating.toFixed(1)}
+                                    </span>
+                                  </div>
+                                  <span className="text-[10px] font-bold text-[#1A2E35]/30 uppercase tracking-widest leading-none">
+                                    ({count})
+                                  </span>
+                                </>
+                              );
+                            })()}
+                          </div>
+                          {variant?.compareAtPrice && parseFloat(variant.compareAtPrice.amount) > parseFloat(variant.price.amount) && (
+                            <span className="text-sm text-[#1A2E35]/60 line-through">
+                              {variant.compareAtPrice.currencyCode === 'INR' ? '₹' : variant.compareAtPrice.currencyCode} {parseFloat(variant.compareAtPrice.amount).toFixed(2)}
+                            </span>
+                          )}
                         </div>
 
                         <div className="flex gap-3">
