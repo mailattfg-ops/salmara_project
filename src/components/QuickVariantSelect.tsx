@@ -108,10 +108,17 @@ const QuickVariantSelect = ({
               <h3 className="font-display font-medium text-[#1A2E35] text-lg leading-tight line-clamp-2">
                 {product.node.title}
               </h3>
-              <div className="flex items-baseline gap-2">
-                <span className="text-[#C5A059] font-sans-clean font-bold text-xl">
-                  ₹{displayPrice.toFixed(2)}
-                </span>
+              <div className="flex flex-col">
+                <div className="flex items-baseline gap-2">
+                  <span className="text-[#C5A059] font-sans-clean font-bold text-xl">
+                    ₹{displayPrice.toFixed(2)}
+                  </span>
+                </div>
+                {selectedVariant?.compareAtPrice && parseFloat(selectedVariant.compareAtPrice.amount) > displayPrice && (
+                  <span className="text-sm text-[#1A2E35]/60 line-through">
+                    {selectedVariant.compareAtPrice.currencyCode === 'INR' ? '₹' : selectedVariant.compareAtPrice.currencyCode} {parseFloat(selectedVariant.compareAtPrice.amount).toFixed(2)}
+                  </span>
+                )}
               </div>
             </div>
           </div>

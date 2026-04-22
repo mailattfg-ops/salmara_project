@@ -733,7 +733,7 @@ const ProductDetail = () => {
                   </span>
                   
                   {selectedVariant?.compareAtPrice && parseFloat(selectedVariant.compareAtPrice.amount) > parseFloat(selectedVariant.price.amount) && (
-                    <span className="text-lg text-[#1A2E35]/30 line-through">
+                    <span className="text-3xl text-[#1A2E35]/60 line-through">
                       {selectedVariant.compareAtPrice.currencyCode === 'INR' ? '₹' : selectedVariant.compareAtPrice.currencyCode}{' '}
                       {parseFloat(selectedVariant.compareAtPrice.amount).toFixed(2)}
                     </span>

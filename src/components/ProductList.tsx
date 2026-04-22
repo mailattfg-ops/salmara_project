@@ -262,7 +262,7 @@ const ProductList = () => {
                         </h3>
                       </Link>
                       {displayPrice.amount > 0 && (
-                        <span className="text-[#C5A059] font-sans-clean font-bold text-sm ml-2 whitespace-nowrap">
+                        <span className="text-[#C5A059] font-sans-clean font-bold text-lg ml-2 whitespace-nowrap">
                           {displayPrice.currency === 'INR' ? '₹' : displayPrice.currency} {displayPrice.amount.toFixed(2)}
                         </span>
                       )}

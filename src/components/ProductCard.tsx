@@ -143,7 +143,7 @@ const ProductCard = ({
           </Link>
           {price && (
             <div className="flex items-baseline gap-1.5 whitespace-nowrap ml-2">
-              <span className="text-[#C5A059] font-sans-clean font-bold text-sm">
+              <span className="text-[#C5A059] font-sans-clean font-bold text-lg">
                 {price.currencyCode === 'INR' ? '₹' : price.currencyCode} {parseFloat(price.amount).toFixed(2)}
               </span>
             </div>
@@ -179,9 +179,8 @@ const ProductCard = ({
               );
             })()}
           </div>
-
           {variant?.compareAtPrice && parseFloat(variant.compareAtPrice.amount) > parseFloat(price?.amount || "0") && (
-            <span className="text-[10px] text-[#1A2E35]/30 line-through">
+            <span className="text-sm text-[#1A2E35]/60 line-through">
               {variant.compareAtPrice.currencyCode === 'INR' ? '₹' : variant.compareAtPrice.currencyCode} {parseFloat(variant.compareAtPrice.amount).toFixed(2)}
             </span>
           )}

@@ -763,7 +763,7 @@ const ShopPage = () => {
                           </Link>
                           {displayPrice.amount > 0 && (
                             <div className="flex items-baseline gap-2 whitespace-nowrap ml-2">
-                              <span className="text-xl font-sans-clean font-bold text-foreground">
+                              <span className="text-lg font-sans-clean font-bold text-foreground">
                                 {displayPrice.currency === 'INR' ? '₹' : displayPrice.currency} {displayPrice.amount.toFixed(2)}
                               </span>
                             </div>
@@ -799,9 +799,8 @@ const ShopPage = () => {
                               );
                             })()}
                           </div>
-
-                          {!displayPrice.fromMetafield && variant.compareAtPrice && parseFloat(variant.compareAtPrice.amount) > displayPrice.amount && (
-                            <span className="text-sm text-muted-foreground/50 line-through">
+                          {variant?.compareAtPrice && parseFloat(variant.compareAtPrice.amount) > displayPrice.amount && (
+                            <span className="text-sm text-[#1A2E35]/60 line-through">
                               {variant.compareAtPrice.currencyCode === 'INR' ? '₹' : variant.compareAtPrice.currencyCode} {parseFloat(variant.compareAtPrice.amount).toFixed(2)}
                             </span>
                           )}
