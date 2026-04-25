@@ -224,10 +224,11 @@ const FeaturedProducts = () => {
         if (mQty) finalTitle = mQty;
       }
 
+      const { taxPercentage } = useSettingsStore.getState();
       const lineItems = [{
         variantId: variant.id,
         quantity: quantity,
-        unitPrice: finalPrice,
+        unitPrice: finalPrice * (1 + taxPercentage / 100),
         title:
           finalTitle && finalTitle !== "Default Title"
             ? `${selectedProductForCheckout.node.title} - ${finalTitle}`

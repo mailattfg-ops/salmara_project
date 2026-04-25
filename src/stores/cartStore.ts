@@ -1,5 +1,7 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
+import { useSettingsStore } from './settingsStore';
+
 import {
   type ShopifyProduct,
   getStoredSession,
@@ -116,15 +118,17 @@ export const useCartStore = create<CartStore>()(
     set({ isLoading: true });
     try {
       const session = getStoredSession();
+      const { taxPercentage } = useSettingsStore.getState();
       const lineItems = items.map(item => ({
         variantId: item.variantId,
         quantity: item.quantity,
-        unitPrice: Number(item.price?.amount || 0),
+        unitPrice: Number(item.price?.amount || 0) * (1 + taxPercentage / 100),
         title:
           item.variantTitle && item.variantTitle !== "Default Title"
             ? `${item.product.node.title} - ${item.variantTitle}`
             : item.product.node.title,
       }));
+
 
 
       const result = await createHybridCheckout(

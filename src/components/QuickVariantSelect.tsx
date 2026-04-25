@@ -9,6 +9,8 @@ import { type ShopifyProduct } from "@/lib/shopifyAdmin";
 import { Image } from "@/components/ui/Image";
 import { ShoppingCart, Loader2, Leaf, X, Minus, Plus } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useSettingsStore } from "@/stores/settingsStore";
+
 
 interface QuickVariantSelectProps {
   product: ShopifyProduct | null;
@@ -29,6 +31,8 @@ const QuickVariantSelect = ({
   const [selectedMetafieldOptionIdx, setSelectedMetafieldOptionIdx] = useState(0);
   const [quantity, setQuantity] = useState(1);
   const [isProcessing, setIsProcessing] = useState(false);
+  const { taxPercentage } = useSettingsStore();
+
 
   if (!product) return null;
 
@@ -62,9 +66,11 @@ const QuickVariantSelect = ({
   const selectedMetafieldPrice = Number((selectedMetafieldPriceRaw || "").replace(/[^\d.]/g, ""));
   const hasValidMetafieldPrice = Number.isFinite(selectedMetafieldPrice) && selectedMetafieldPrice > 0;
 
-  const displayPrice = (hasValidMetafieldPrice && usesMetafieldVariantOptions)
+  const basePrice = (hasValidMetafieldPrice && usesMetafieldVariantOptions)
     ? selectedMetafieldPrice
     : parseFloat(selectedVariant?.price?.amount || "0");
+  const displayPrice = basePrice * (1 + taxPercentage / 100);
+
 
   const handleAction = async (action: 'cart' | 'buy') => {
     setIsProcessing(true);
@@ -114,11 +120,12 @@ const QuickVariantSelect = ({
                     ₹{displayPrice.toFixed(2)}
                   </span>
                 </div>
-                {selectedVariant?.compareAtPrice && parseFloat(selectedVariant.compareAtPrice.amount) > displayPrice && (
+                {selectedVariant?.compareAtPrice && parseFloat(selectedVariant.compareAtPrice.amount) > basePrice && (
                   <span className="text-sm text-[#1A2E35]/60 line-through">
-                    {selectedVariant.compareAtPrice.currencyCode === 'INR' ? '₹' : selectedVariant.compareAtPrice.currencyCode} {parseFloat(selectedVariant.compareAtPrice.amount).toFixed(2)}
+                    {selectedVariant.compareAtPrice.currencyCode === 'INR' ? '₹' : selectedVariant.compareAtPrice.currencyCode} {(parseFloat(selectedVariant.compareAtPrice.amount) * (1 + taxPercentage / 100)).toFixed(2)}
                   </span>
                 )}
+
               </div>
             </div>
           </div>

@@ -33,7 +33,9 @@ import { throttle } from "@/lib/utils";
 import { useCartStore } from "@/stores/cartStore";
 
 import { useWishlistStore } from "@/stores/wishlistStore";
+import { useSettingsStore } from "@/stores/settingsStore";
 import { toast } from "sonner";
+
 import { lazy, Suspense } from "react";
 const AddressSelectionModal = lazy(() => import("@/components/AddressSelectionModal"));
 import { useNavigate, useSearchParams } from "react-router-dom";
@@ -70,13 +72,17 @@ const sortByLabels: Record<string, string> = {
   "Newest First": "Newest First",
 };
 
-const getProductDisplayPrice = (product: ShopifyProduct) => {
+const getProductDisplayPrice = (product: ShopifyProduct, taxPercentage: number = 0) => {
   const metafields = (product.node as any)?.metafields?.edges || [];
   const priceMeta = metafields.find(
     (edge: any) =>
       edge?.node?.namespace === "custom" &&
       ["price", "mrp", "selling_price"].includes(String(edge?.node?.key || "").toLowerCase())
   )?.node?.value as string | undefined;
+
+  let baseAmount = 0;
+  let currency = "INR";
+  let fromMetafield = false;
 
   if (priceMeta) {
     const firstPart = priceMeta
@@ -85,18 +91,25 @@ const getProductDisplayPrice = (product: ShopifyProduct) => {
       .find(Boolean);
     const parsed = Number((firstPart || "").replace(/[^\d.]/g, ""));
     if (Number.isFinite(parsed) && parsed > 0) {
-      return { amount: parsed, currency: "INR", fromMetafield: true };
+      baseAmount = parsed;
+      fromMetafield = true;
     }
   }
 
-  const variant = product.node.variants.edges[0]?.node;
-  const parsedVariant = Number(variant?.price?.amount || 0);
+  if (!baseAmount) {
+    const variant = product.node.variants.edges[0]?.node;
+    baseAmount = Number(variant?.price?.amount || 0);
+    currency = variant?.price?.currencyCode || "INR";
+  }
+
   return {
-    amount: Number.isFinite(parsedVariant) ? parsedVariant : 0,
-    currency: variant?.price?.currencyCode || "INR",
-    fromMetafield: false,
+    amount: baseAmount * (1 + taxPercentage / 100),
+    baseAmount,
+    currency,
+    fromMetafield,
   };
 };
+
 
 const ShopPage = () => {
   const [products, setProducts] = useState<ShopifyProduct[]>([]);
@@ -181,7 +194,9 @@ const ShopPage = () => {
   }, [products]);
 
   // Filtering Logic
+  const { taxPercentage } = useSettingsStore();
   const filteredProducts = useMemo(() => {
+
     return products.filter(p => {
       // 1. Category Filter (Check if product belongs to the selected Shopify Collection)
       if (selectedCategory && selectedCategory !== "All Categories") {
@@ -189,7 +204,8 @@ const ShopPage = () => {
       }
 
       // 3. Price Filter
-      const price = getProductDisplayPrice(p).amount;
+      const price = getProductDisplayPrice(p, taxPercentage).amount;
+
       if (selectedPriceRange !== "all") {
         const [min, max] = selectedPriceRange.split("-");
         if (max === "plus") {
@@ -219,8 +235,9 @@ const ShopPage = () => {
       return true;
     }).sort((a, b) => {
       // Sorting Logic
-      const priceA = getProductDisplayPrice(a).amount;
-      const priceB = getProductDisplayPrice(b).amount;
+      const priceA = getProductDisplayPrice(a, taxPercentage).amount;
+      const priceB = getProductDisplayPrice(b, taxPercentage).amount;
+
 
       if (sortBy === "Price: Low to High") return priceA - priceB;
       if (sortBy === "Price: High to Low") return priceB - priceA;
@@ -263,7 +280,8 @@ const ShopPage = () => {
 
     const variant = variants[0]?.node;
     if (!variant) return;
-    const displayPrice = getProductDisplayPrice(product);
+    const displayPrice = getProductDisplayPrice(product, taxPercentage);
+
 
     setAddingId(product.node.id);
     try {
@@ -319,7 +337,8 @@ const ShopPage = () => {
     const session = getStoredSession();
     if (!session?.user) {
       toast.info("Please sign in to proceed with direct checkout");
-      const displayPrice = getProductDisplayPrice(product);
+      const displayPrice = getProductDisplayPrice(product, taxPercentage);
+
       const checkoutTitle =
         variant.title && variant.title !== "Default Title"
           ? `${product.node.title} - ${variant.title}`
@@ -712,7 +731,8 @@ const ShopPage = () => {
                 {filteredProducts.map((product, i) => {
                   const variant = product.node.variants.edges[0]?.node;
                   const image = product.node.images.edges[0]?.node;
-                  const displayPrice = getProductDisplayPrice(product);
+                  const displayPrice = getProductDisplayPrice(product, taxPercentage);
+
                   
                   return (
                     <m.div
