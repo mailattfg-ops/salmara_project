@@ -433,14 +433,11 @@ const Dashboard = () => {
                         <label className="flex items-center gap-2 text-[10px] uppercase tracking-widest font-bold text-[#1A2E35]/40 mb-3">
                           <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
                           Phone Number
+                          <span className="text-[8px] bg-[#F2EDE4] text-[#1A2E35]/40 px-2 py-0.5 rounded-md ml-1">Read Only</span>
                         </label>
-                        <input 
-                          type="tel" 
-                          value={formData.phone}
-                          onChange={(e) => setFormData({...formData, phone: e.target.value})}
-                          className="w-full bg-[#FDFBF7] border-2 border-[#F2EDE4] rounded-2xl px-5 py-3 text-base font-sans-clean font-medium text-[#1A2E35] focus:outline-none focus:border-[#5A7A5C] focus:bg-white transition-all placeholder:text-[#1A2E35]/20"
-                          placeholder="Enter phone number"
-                        />
+                        <div className="w-full bg-[#F8F9FA] border-2 border-[#F2EDE4] rounded-2xl px-5 py-3 text-base font-sans-clean font-medium text-[#1A2E35]/50 cursor-not-allowed select-all">
+                          {formData.phone || "Not provided"}
+                        </div>
                       </div>
                     </div>
                   </div>
