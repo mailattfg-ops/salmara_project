@@ -1201,7 +1201,7 @@ export async function logCheckoutToTerminal(url: string, source: string, items?:
 /**
  * Check if a customer has purchased a specific product.
  */
-export async function checkCustomerHasPurchased(customerId: string, productId: string): Promise<boolean> {
+export async function checkCustomerHasPurchased(customerId: string, productId: string): Promise<{ purchased: boolean; fulfilled: boolean }> {
   try {
     const data = await adminApiRequest(CUSTOMER_ORDERS_QUERY, { id: customerId });
     const orders = data?.data?.customer?.orders?.edges || [];
@@ -1209,23 +1209,30 @@ export async function checkCustomerHasPurchased(customerId: string, productId: s
     const getNumericId = (gid: string) => gid?.split('/').pop();
     const targetProductIdNum = getNumericId(productId);
 
-    // Flatten all line items from all orders and check for the productId
-    return orders.some((orderEdge: any) => {
+    let purchased = false;
+    let fulfilled = false;
+
+    orders.forEach((orderEdge: any) => {
       const lineItems = orderEdge.node.lineItems.edges || [];
-      return lineItems.some((liEdge: any) => {
+      const hasProduct = lineItems.some((liEdge: any) => {
         const boughtProductId = liEdge.node.product?.id;
         if (!boughtProductId) return false;
-        
-        // Direct match
-        if (boughtProductId === productId) return true;
-        
-        // Numeric match fallback
-        return getNumericId(boughtProductId) === targetProductIdNum;
+        return boughtProductId === productId || getNumericId(boughtProductId) === targetProductIdNum;
       });
+
+      if (hasProduct) {
+        purchased = true;
+        const status = (orderEdge.node.displayFulfillmentStatus || '').toUpperCase();
+        if (status === 'FULFILLED' || status === 'DELIVERED') {
+          fulfilled = true;
+        }
+      }
     });
+
+    return { purchased, fulfilled };
   } catch (error) {
     console.error("Error verifying purchase:", error);
-    return false;
+    return { purchased: false, fulfilled: false };
   }
 }
 

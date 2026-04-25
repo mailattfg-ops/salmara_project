@@ -91,6 +91,7 @@ const ProductDetail = () => {
   const [isSubmittingQuestion, setIsSubmittingQuestion] = useState(false);
   const [reviews, setReviews] = useState<any[]>([]);
   const [hasPurchased, setHasPurchased] = useState(false);
+  const [isFulfilled, setIsFulfilled] = useState(false);
   const [isCheckingEligibility, setIsCheckingEligibility] = useState(false);
   const [isSubmittingReview, setIsSubmittingReview] = useState(false);
   const [relatedProducts, setRelatedProducts] = useState<any[]>([]);
@@ -125,8 +126,9 @@ const ProductDetail = () => {
   const checkEligibility = async (customerId: string, productId: string) => {
     setIsCheckingEligibility(true);
     try {
-      const purchased = await checkCustomerHasPurchased(customerId, productId);
-      setHasPurchased(purchased);
+      const result = await checkCustomerHasPurchased(customerId, productId);
+      setHasPurchased(result.purchased);
+      setIsFulfilled(result.fulfilled);
     } catch (error) {
       console.error("Eligibility check failed:", error);
     } finally {
@@ -431,7 +433,9 @@ const ProductDetail = () => {
       formulationtype: ['formulation_type', 'type_of_formulation'],
       keyhighlights: ['key_highlights', 'highlights', 'key_points'],
       deliveryreturns: ['delivery_and_returns', 'delivery_returns', 'returns', 'shipping_returns'],
-      relatedproducts: ['related_products']
+      relatedproducts: ['related_products'],
+      countryoforigin: ['country_of_origin', 'origin', 'shelf_life'],
+      warnings: ['warnings', 'additional_notes', 'notes', 'precautions']
     };
 
     const possibleKeys = keyMap[cleanMatch] || [cleanMatch];
@@ -460,8 +464,8 @@ const ProductDetail = () => {
     return <Activity className="h-4 w-4" />;
   };
 
-  const firstBenefit = getMetafieldValue('benefits')?.split(/\n+/)[0]?.trim();
-  const benefitLine = firstBenefit || "Ayurvedic Formulation";
+  const firstHighlight = getMetafieldValue('keyhighlights')?.split(/\n+/)[0]?.trim();
+  const highlightLine = firstHighlight || "Ayurvedic Formulation";
   const subtitle = product.description?.split('.')[0] + '.' || "-";
   const parseRows = (value: string | null) => {
     if (!value) return [];
@@ -753,7 +757,7 @@ const ProductDetail = () => {
                 </div>
 
                 <p className="text-base text-[#1A2E35]/60 font-sans-clean leading-relaxed max-w-lg">
-                   {benefitLine}
+                   {highlightLine}
                 </p>
               </div>
 
@@ -868,7 +872,7 @@ const ProductDetail = () => {
                       activeTab === tab ? 'text-primary' : 'text-[#1A2E35]/30 hover:text-[#1A2E35]'
                     }`}
                   >
-                    {tab === 'shipping' ? 'Shipping & Returns' : tab === 'faq' ? 'FAQ' : tab === 'additional' ? 'Benefits' : tab}
+                    {tab === 'shipping' ? 'Shipping & Returns' : tab === 'faq' ? 'FAQ' : tab === 'additional' ? 'Ingredients & Benefits' : tab}
                     {activeTab === tab && (
                       <m.div 
                         layoutId="activeTab"
@@ -891,8 +895,7 @@ const ProductDetail = () => {
                     className="space-y-12"
                   >
                     <div 
-                      className="text-sm md:text-base text-[#1A2E35]/70 font-sans-clean leading-relaxed prose prose-stone max-w-none 
-                                 prose-p:mb-5 prose-p:leading-loose prose-strong:text-[#1A2E35] prose-strong:font-bold prose-headings:font-display prose-headings:text-[#1A2E35]"
+                      className="text-sm md:text-base text-[#1A2E35]/70 font-sans-clean leading-relaxed product-description max-w-none"
                       dangerouslySetInnerHTML={{ __html: product.descriptionHtml || product.description }}
                     />
 
@@ -927,9 +930,74 @@ const ProductDetail = () => {
                       </div>
                     </div>
 
+
+                    {/* Technical Specs Table */}
+                    <div className="pt-12 border-t border-[#F2EDE4]">
+                      <h3 className="text-xs font-bold uppercase tracking-[0.3em] text-[#1A2E35]/30 mb-8">Product Specifications</h3>
+                      <div className="overflow-hidden rounded-2xl border border-[#F2EDE4]">
+                        <table className="w-full text-left bg-white">
+                          <tbody>
+                            {[
+                              { label: "Formulation Type", value: getMetafieldValue('formulationtype') || product.productType },
+                              { label: "Net Quantity", value: selectedMetafieldNetQty || getMetafieldValue('netquantity') },
+                              { label: "Usage", value: getMetafieldValue('usage') },
+                              { label: "Recommended Dosage", value: getMetafieldValue('dosage') },
+                              { label: "Shelf Life", value: getMetafieldValue('shelf') },
+                              { label: "Country of Origin", value: getMetafieldValue('countryoforigin') },
+                              { label: "Vendor", value: product.vendor },
+                              { label: "Manufactured By", value: getMetafieldValue('manufacturedby') || product.vendor },
+                              { label: "License Number", value: getMetafieldValue('licenseno') },
+                              { label: "Batch Number", value: getMetafieldValue('batchno') },
+                            ].map((row, i) => (
+                              <tr key={i} className={`border-b border-[#F2EDE4] last:border-none ${i % 2 === 0 ? 'bg-secondary/10' : ''}`}>
+                                <th className="py-5 px-8 text-[10px] font-bold text-[#1A2E35] uppercase tracking-[0.2em] w-1/3 font-sans-clean">
+                                  {row.label}
+                                </th>
+                                <td className="py-5 px-8 text-sm text-[#1A2E35]/70 font-sans-clean italic">
+                                  {row.value || "-"}
+                                </td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
+
+                    {/* Additional Notes Section */}
+                    {getMetafieldValue('warnings') && (
+                      <div className="pt-12 border-t border-[#F2EDE4]">
+                        <div className="flex items-center gap-3 mb-8">
+                          <AlertCircle className="h-5 w-5 text-destructive/60" />
+                          <h3 className="text-xs font-bold uppercase tracking-[0.3em] text-[#1A2E35]/30">Additional Notes</h3>
+                        </div>
+                        <div className="bg-destructive/5 border border-destructive/10 rounded-2xl p-6 md:p-8">
+                          <div className="space-y-4">
+                            {getMetafieldValue('warnings').split(/\n+/).map((note: string, i: number) => (
+                              <div key={i} className="flex gap-3 items-start">
+                                <div className="h-1.5 w-1.5 rounded-full bg-destructive/40 mt-2 shrink-0" />
+                                <p className="text-sm text-[#1A2E35]/70 font-sans-clean leading-relaxed italic">
+                                  {note.trim()}
+                                </p>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                  </m.div>
+                )}
+
+                {activeTab === 'additional' && (
+                    <m.div
+                    key="additional"
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -10 }}
+                    className="space-y-16"
+                  >
                     {/* Ingredients Section */}
                     {getMetafieldValue('ingredients') && (
-                      <div className="pt-12 border-t border-[#F2EDE4]">
+                      <div className="space-y-8">
                         <h3 className="text-xs font-bold uppercase tracking-[0.3em] text-[#1A2E35]/30 mb-8">Key Ingredients</h3>
                         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-x-8 gap-y-10">
                           {getMetafieldValue('ingredients').split(/\n+/).map((line: string, i: number) => {
@@ -947,49 +1015,14 @@ const ProductDetail = () => {
                             );
                           })}
                         </div>
+                        <div className="pt-16 border-t border-[#F2EDE4]" />
                       </div>
                     )}
-
-                    {/* Technical Specs Table */}
-                    <div className="pt-12 border-t border-[#F2EDE4]">
-                      <h3 className="text-xs font-bold uppercase tracking-[0.3em] text-[#1A2E35]/30 mb-8">Product Specifications</h3>
-                      <div className="overflow-hidden rounded-2xl border border-[#F2EDE4]">
-                        <table className="w-full text-left bg-white">
-                          <tbody>
-                            {[
-                              { label: "Shelf Life", value: getMetafieldValue('shelf') },
-                              { label: "Net Quantity", value: selectedMetafieldNetQty || getMetafieldValue('netquantity') },
-                              { label: "Formulation Type", value: getMetafieldValue('formulationtype') || product.productType },
-                              { label: "Recommended Dosage", value: getMetafieldValue('dosage') },
-                              { label: "Manufactured By", value: getMetafieldValue('manufacturedby') || product.vendor },
-                            ].map((row, i) => (
-                              <tr key={i} className={`border-b border-[#F2EDE4] last:border-none ${i % 2 === 0 ? 'bg-secondary/10' : ''}`}>
-                                <th className="py-5 px-8 text-[10px] font-bold text-[#1A2E35] uppercase tracking-[0.2em] w-1/3 font-sans-clean">
-                                  {row.label}
-                                </th>
-                                <td className="py-5 px-8 text-sm text-[#1A2E35]/70 font-sans-clean italic">
-                                  {row.value || "-"}
-                                </td>
-                              </tr>
-                            ))}
-                          </tbody>
-                        </table>
-                      </div>
-                    </div>
-                  </m.div>
-                )}
-
-                {activeTab === 'additional' && (
-                  <m.div
-                    key="additional"
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -10 }}
-                    className="space-y-16"
-                  >
                     {/* Benefits Section */}
                     {getMetafieldValue('benefits') && (
-                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
+                      <div className="space-y-8">
+                        <h3 className="text-xs font-bold uppercase tracking-[0.3em] text-[#1A2E35]/30 mb-8">Key Benefits</h3>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
                         {getMetafieldValue('benefits').split(/\n+/).map((benefit: string, i: number) => (
                           <div 
                             key={i} 
@@ -1004,7 +1037,8 @@ const ProductDetail = () => {
                           </div>
                         ))}
                       </div>
-                    )}
+                    </div>
+                  )}
                   </m.div>
                 )}
 
@@ -1091,20 +1125,29 @@ const ProductDetail = () => {
                     exit={{ opacity: 0, y: -10 }}
                     className="space-y-12"
                   >
-                    <div className="flex flex-col md:flex-row justify-between items-center gap-8 mb-8">
+                    <div className="flex flex-col md:flex-row justify-between items-center gap-8 mb-12">
                       <div className="text-center md:text-left">
-                        <p className="text-4xl font-display font-bold text-[#1A2E35] mb-2">{averageRating}</p>
-                        <div className="flex gap-1 text-[#C5A059] mb-2">
-                          {[1,2,3,4,5].map(s => <Star key={s} className={`h-4 w-4 ${s <= Math.round(averageRating) ? 'fill-current' : 'text-[#F2EDE4]'}`} />)}
-                        </div>
-                        <p className="text-[10px] font-bold text-[#1A2E35]/40 uppercase tracking-widest">Based on {safeReviews.length} verified reviews</p>
+                        {safeReviews.length > 0 ? (
+                          <>
+                            <p className="text-4xl font-display font-bold text-[#1A2E35] mb-2">{averageRating}</p>
+                            <div className="flex gap-1 text-[#C5A059] mb-2">
+                              {[1,2,3,4,5].map(s => <Star key={s} className={`h-4 w-4 ${s <= Math.round(averageRating) ? 'fill-current' : 'text-[#F2EDE4]'}`} />)}
+                            </div>
+                            <p className="text-[10px] font-bold text-[#1A2E35]/40 uppercase tracking-widest">Based on {safeReviews.length} verified reviews</p>
+                          </>
+                        ) : (
+                          <div className="space-y-1">
+                            <h3 className="text-2xl md:text-3xl font-display font-medium text-[#1A2E35]">Remedy Reviews</h3>
+                            <p className="text-[10px] font-bold text-[#5A7A5C] uppercase tracking-[0.2em] mt-2">Authentic Customer Experiences</p>
+                          </div>
+                        )}
                       </div>
                       <div className="flex flex-col items-center md:items-end gap-3">
                         <button 
                           onClick={() => setReviewModalOpen(true)}
-                          disabled={!hasPurchased || isCheckingEligibility}
+                          disabled={!isFulfilled || isCheckingEligibility}
                           className={`px-8 py-4 rounded-xl text-[10px] font-bold uppercase tracking-widest transition-all shadow-lg active:scale-95 flex items-center gap-2 ${
-                            (!hasPurchased || isCheckingEligibility)
+                            (!isFulfilled || isCheckingEligibility)
                               ? 'bg-[#1A2E35]/10 text-[#1A2E35]/40 cursor-not-allowed shadow-none'
                               : 'bg-[#1A2E35] text-white hover:bg-primary'
                           }`}
@@ -1114,9 +1157,11 @@ const ProductDetail = () => {
                           ) : null}
                           {isCheckingEligibility ? 'Checking eligibility...' : 'Write a Review'}
                         </button>
-                        {!hasPurchased && !isCheckingEligibility && (
+                        {!isFulfilled && !isCheckingEligibility && (
                           <p className="text-[9px] font-bold text-[#C5A059] uppercase tracking-wider italic">
-                            Only verified buyers can leave a review
+                            {hasPurchased 
+                              ? "Review available once your order is fulfilled" 
+                              : "Only verified buyers can leave a review"}
                           </p>
                         )}
                       </div>
