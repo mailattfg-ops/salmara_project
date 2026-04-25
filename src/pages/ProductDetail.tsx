@@ -11,6 +11,8 @@ import {
   logCheckoutToTerminal
 } from "@/lib/shopifyAdmin";
 import { useCartStore } from "@/stores/cartStore";
+import { useSettingsStore } from "@/stores/settingsStore";
+
 import { 
   ArrowLeft, 
   ShoppingCart, 
@@ -100,8 +102,15 @@ const ProductDetail = () => {
     ? parseFloat((safeReviews.reduce((acc, r) => acc + (Number(r.rating) || 0), 0) / safeReviews.length).toFixed(1))
     : 0;
 
+  const { taxPercentage, fetchSettings } = useSettingsStore();
+
+  useEffect(() => {
+    fetchSettings();
+  }, [fetchSettings]);
+
   useEffect(() => {
     const session = getStoredSession();
+
     if (session?.user) {
       setReviewName(session.user.name || "");
       setQuestionName(session.user.name || "");
@@ -727,15 +736,18 @@ const ProductDetail = () => {
                 </div>
                 
                 <div className="flex items-baseline gap-3 pt-2">
-                  <span className="text-3xl font-sans-clean font-bold text-[#C5A059]">
-                    {(hasValidMetafieldPrice && usesMetafieldVariantOptions) ? '₹' : (selectedVariant?.price.currencyCode === 'INR' ? '₹' : selectedVariant?.price.currencyCode)}{' '}
-                    {(hasValidMetafieldPrice && usesMetafieldVariantOptions) ? selectedMetafieldPrice.toFixed(2) : parseFloat(selectedVariant?.price.amount || "0").toFixed(2)}
-                  </span>
+                  <div className="flex flex-col">
+                    <span className="text-3xl font-sans-clean font-bold text-[#C5A059]">
+                      {selectedVariant?.price.currencyCode === 'INR' ? '₹' : selectedVariant?.price.currencyCode}{' '}
+                      {((hasValidMetafieldPrice && usesMetafieldVariantOptions ? selectedMetafieldPrice : parseFloat(selectedVariant?.price.amount || "0")) * (1 + taxPercentage / 100)).toFixed(2)}
+                    </span>
+                    <span className="text-[10px] font-bold text-[#1A2E35]/30 uppercase tracking-widest mt-1">Incl. {taxPercentage}% Taxes</span>
+                  </div>
                   
                   {selectedVariant?.compareAtPrice && parseFloat(selectedVariant.compareAtPrice.amount) > parseFloat(selectedVariant.price.amount) && (
                     <span className="text-3xl text-[#1A2E35]/60 line-through">
                       {selectedVariant.compareAtPrice.currencyCode === 'INR' ? '₹' : selectedVariant.compareAtPrice.currencyCode}{' '}
-                      {parseFloat(selectedVariant.compareAtPrice.amount).toFixed(2)}
+                      {(parseFloat(selectedVariant.compareAtPrice.amount) * (1 + taxPercentage / 100)).toFixed(2)}
                     </span>
                   )}
                 </div>

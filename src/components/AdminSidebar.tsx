@@ -12,8 +12,10 @@ import {
   Bell,
   Search,
   HelpCircle,
-  Star
+  Star,
+  Percent
 } from "lucide-react";
+
 import { m, AnimatePresence } from "framer-motion";
 import { getStoredSession, logoutAdmin } from "@/lib/shopifyAdmin";
 import { toast } from "sonner";
@@ -41,6 +43,8 @@ const AdminSidebar = ({ isMobileOpen, setIsMobileOpen }: AdminSidebarProps) => {
     { id: "user-doubts", label: "User Doubts", icon: HelpCircle, path: "/admin-salmara/user-doubts" },
     { id: "enquiries", label: "Enquiries", icon: MessageSquare, path: "/admin-salmara/enquiries" },
     { id: "product-reviews", label: "Product Reviews", icon: Star, path: "/admin-salmara/product-reviews" },
+    { id: "extra-charges", label: "Extra Charges", icon: Percent, path: "/admin-salmara/extra-charges" },
+
   ];
 
   return (

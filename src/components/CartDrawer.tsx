@@ -4,7 +4,9 @@ import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTr
 import { ShoppingCart, Minus, Plus, Trash2, ExternalLink, Loader2 } from "lucide-react";
 import { getStoredSession, logCheckoutToTerminal } from "@/lib/shopifyAdmin";
 import { useCartStore } from "@/stores/cartStore";
+import { useSettingsStore } from "@/stores/settingsStore";
 import { toast } from "sonner";
+
 import { useNavigate } from "react-router-dom";
 const AddressSelectionModal = lazy(() => import("@/components/AddressSelectionModal"));
 
@@ -13,10 +15,17 @@ export const CartDrawer = () => {
   const [isAddressModalOpen, setIsAddressModalOpen] = useState(false);
   const navigate = useNavigate();
   const { items, isLoading, updateQuantity, removeItem, checkout, syncCart } = useCartStore();
+  const { taxPercentage, fetchSettings } = useSettingsStore();
   const totalItems = items.reduce((sum, item) => sum + item.quantity, 0);
-  const totalPrice = items.reduce((sum, item) => sum + (parseFloat(item.price.amount) * item.quantity), 0);
+  const subtotal = items.reduce((sum, item) => sum + (parseFloat(item.price.amount) * item.quantity), 0);
+  const totalPrice = subtotal * (1 + taxPercentage / 100);
 
-  useEffect(() => { if (isOpen) syncCart(); }, [isOpen, syncCart]);
+  useEffect(() => { 
+    if (isOpen) {
+      syncCart(); 
+      fetchSettings();
+    }
+  }, [isOpen, syncCart, fetchSettings]);
 
   const handleCheckout = async () => {
     const session = getStoredSession();
@@ -98,8 +107,9 @@ export const CartDrawer = () => {
                             <p className="text-xs text-muted-foreground font-sans-clean">{item.variantTitle}</p>
                           )}
                           <p className="font-sans-clean font-semibold text-sm mt-1">
-                            {item.price.currencyCode === 'INR' ? '₹' : item.price.currencyCode} {parseFloat(item.price.amount).toFixed(2)}
+                            {item.price.currencyCode === 'INR' ? '₹' : item.price.currencyCode} {(parseFloat(item.price.amount) * (1 + taxPercentage / 100)).toFixed(2)}
                           </p>
+
                         </div>
                         <div className="flex flex-col items-end gap-2 flex-shrink-0">
                           <button 
@@ -133,15 +143,26 @@ export const CartDrawer = () => {
                 </div>
                 <div className="flex-shrink-0 space-y-4 pt-4 border-t border-border">
                   <div className="space-y-1.5">
-
-                    <div className="flex justify-between items-center">
-                      <span className="font-display font-semibold">Total</span>
+                    <div className="flex justify-between items-center text-sm text-muted-foreground">
+                      <span>Subtotal (Base)</span>
+                      <span className="font-sans-clean">
+                        {items[0]?.price.currencyCode === 'INR' ? '₹' : items[0]?.price.currencyCode} {subtotal.toFixed(2)}
+                      </span>
+                    </div>
+                    <div className="flex justify-between items-center text-sm text-muted-foreground">
+                      <span>Estimated Tax ({taxPercentage}%)</span>
+                      <span className="font-sans-clean">
+                        {items[0]?.price.currencyCode === 'INR' ? '₹' : items[0]?.price.currencyCode} {(subtotal * taxPercentage / 100).toFixed(2)}
+                      </span>
+                    </div>
+                    <div className="flex justify-between items-center pt-2">
+                      <span className="font-display font-semibold">Total (Incl. Taxes)</span>
                       <span className="text-xl font-sans-clean font-bold">
                         {items[0]?.price.currencyCode === 'INR' ? '₹' : items[0]?.price.currencyCode} {totalPrice.toFixed(2)}
                       </span>
                     </div>
-                 
                   </div>
+
                   <button
                     onClick={handleCheckout}
                     disabled={isLoading}

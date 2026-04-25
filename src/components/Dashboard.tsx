@@ -36,7 +36,9 @@ import { toast } from "sonner";
 import { m, AnimatePresence } from "framer-motion";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { useCartStore } from "@/stores/cartStore";
+import { useSettingsStore } from "@/stores/settingsStore";
 import { Image } from "@/components/ui/Image";
+
 
 
 const logo = "/images/brand/salamara_icon.webp";
@@ -846,7 +848,17 @@ const DashboardCart = ({
   setSelectedAddress: (addr: any) => void 
 }) => {
   const { items, isLoading, updateQuantity, removeItem, checkout } = useCartStore();
-  const totalPrice = items.reduce((sum, item) => sum + (parseFloat(item.price.amount) * item.quantity), 0);
+  const { taxPercentage, fetchSettings } = useSettingsStore();
+
+  useEffect(() => {
+    fetchSettings();
+  }, [fetchSettings]);
+
+  const subtotal = items.reduce((sum, item) => sum + (parseFloat(item.price.amount) * item.quantity), 0);
+
+  const taxAmount = (subtotal * taxPercentage) / 100;
+  const totalEstimate = subtotal + taxAmount;
+
 
   if (items.length === 0) {
     return (
@@ -893,8 +905,9 @@ const DashboardCart = ({
               <div className="flex items-center justify-between mt-4">
                 {/* <p className="font-display font-bold text-[#1A2E35]"> */}
                 <p className="text-lg md:text-xl font-inter font-semibold text-[#1A2E35]">
-                  {item.price.currencyCode === 'INR' ? '₹' : item.price.currencyCode} {parseFloat(item.price.amount).toFixed(2)}
+                  {item.price.currencyCode === 'INR' ? '₹' : item.price.currencyCode} {(parseFloat(item.price.amount) * (1 + taxPercentage / 100)).toFixed(2)}
                 </p>
+
                 <div className="flex items-center gap-3 bg-[#F8F9FA] rounded-lg px-2">
                   <button onClick={() => updateQuantity(item.variantId, item.quantity - 1)} className="p-2 text-[#1A2E35]/30 hover:text-[#1A2E35]">
                     <Minus className="h-3 w-3" />
@@ -948,13 +961,29 @@ const DashboardCart = ({
         )} */}
 
         <div className="flex flex-col md:flex-row items-center justify-between gap-8 pt-8 border-t border-[#F2EDE4]">
-          <div className="text-center md:text-left">
-            <p className="text-[10px] font-bold text-[#1A2E35]/40 uppercase tracking-widest mb-1">Subtotal Estimate</p>
-            {/* <p className="text-3xl font-display font-bold text-[#1A2E35]"> */}
-            <p className="text-4xl md:text-5xl font-inter font-bold text-[#1A2E35] tracking-tight">
-              {items[0]?.price.currencyCode === 'INR' ? '₹' : items[0]?.price.currencyCode} {totalPrice.toFixed(2)}
-            </p>
+          <div className="w-full md:w-auto space-y-4">
+            <div className="flex justify-between items-center md:gap-12">
+              <p className="text-[10px] font-bold text-[#1A2E35]/40 uppercase tracking-widest">Subtotal (Base)</p>
+              <p className="text-sm font-inter font-semibold text-[#1A2E35]">
+                {items[0]?.price.currencyCode === 'INR' ? '₹' : items[0]?.price.currencyCode} {subtotal.toFixed(2)}
+              </p>
+            </div>
+            <div className="flex justify-between items-center md:gap-12">
+              <p className="text-[10px] font-bold text-[#1A2E35]/40 uppercase tracking-widest">Estimated Tax ({taxPercentage}%)</p>
+              <p className="text-sm font-inter font-semibold text-[#1A2E35]">
+                {items[0]?.price.currencyCode === 'INR' ? '₹' : items[0]?.price.currencyCode} {taxAmount.toFixed(2)}
+              </p>
+            </div>
+            <div className="h-px bg-[#F2EDE4]" />
+            <div className="text-center md:text-left">
+              <p className="text-[10px] font-bold text-[#1A2E35]/40 uppercase tracking-widest mb-1">Total (Incl. Taxes)</p>
+              <p className="text-4xl md:text-5xl font-inter font-bold text-[#1A2E35] tracking-tight">
+                {items[0]?.price.currencyCode === 'INR' ? '₹' : items[0]?.price.currencyCode} {totalEstimate.toFixed(2)}
+              </p>
+            </div>
+
           </div>
+
           <button
             onClick={async () => {
               const checkoutUrl = await checkout(selectedAddress);

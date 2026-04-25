@@ -4,8 +4,10 @@ import { Link } from "react-router-dom";
 import React, { memo } from "react";
 import { Image } from "@/components/ui/Image";
 import { type ShopifyProduct } from "@/lib/shopifyAdmin";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import QuickVariantSelect from "./QuickVariantSelect";
+import { useSettingsStore } from "@/stores/settingsStore";
+
 
 interface ProductCardProps {
   product: ShopifyProduct;
@@ -33,9 +35,13 @@ const ProductCard = ({
   const [isVariantModalOpen, setIsVariantModalOpen] = useState(false);
   const [variantAction, setVariantAction] = useState<'cart' | 'buy' | null>(null);
 
+  const { taxPercentage } = useSettingsStore();
   const variant = product.node.variants.edges[0]?.node;
   const image = product.node.images.edges[0]?.node;
-  const price = variant?.price;
+  const basePrice = parseFloat(variant?.price?.amount || "0");
+  const displayPrice = basePrice * (1 + taxPercentage / 100);
+  const currency = variant?.price?.currencyCode === 'INR' ? '₹' : variant?.price?.currencyCode;
+
 
   // Extract benefitLine from metafields
   const benefitMeta = product.node.metafields?.edges?.find(
@@ -141,13 +147,15 @@ const ProductCard = ({
               {product.node.title}
             </h3>
           </Link>
-          {price && (
-            <div className="flex items-baseline gap-1.5 whitespace-nowrap ml-2">
-              <span className="text-[#C5A059] font-sans-clean font-bold text-lg">
-                {price.currencyCode === 'INR' ? '₹' : price.currencyCode} {parseFloat(price.amount).toFixed(2)}
+          {variant?.price && (
+            <div className="flex flex-col items-end ml-2">
+              <span className="text-[#C5A059] font-sans-clean font-bold text-lg leading-none">
+                {currency} {displayPrice.toFixed(2)}
               </span>
+              <span className="text-[8px] font-bold text-[#1A2E35]/30 uppercase tracking-tighter mt-1">Incl. {taxPercentage}% Taxes</span>
             </div>
           )}
+
         </div>
 
         <div className="flex justify-between items-center mb-4">

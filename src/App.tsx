@@ -1,4 +1,6 @@
-import { lazy, Suspense } from "react";
+import { useEffect, lazy, Suspense } from "react";
+import { useSettingsStore } from "@/stores/settingsStore";
+
 import { HelmetProvider } from "react-helmet-async";
 import { BrowserRouter, Route, Routes } from "react-router-dom";
 import { Toaster as Sonner } from "@/components/ui/sonner";
@@ -6,6 +8,8 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { useCartSync } from "@/hooks/useCartSync";
 import { useBfcache } from "@/hooks/useBfcache";
+import { supabase } from "@/integrations/supabase/client";
+
 
 const Index = lazy(() => import("@/pages/Index"));
 const ProductDetail = lazy(() => import("@/pages/ProductDetail"));
@@ -26,6 +30,8 @@ const AdminUserDoubts = lazy(() => import("@/pages/AdminUserDoubts"));
 const AdminEnquiries = lazy(() => import("@/pages/AdminEnquiries"));
 const AdminLoginPage = lazy(() => import("@/pages/AdminLoginPage"));
 const AdminProductReviews = lazy(() => import("@/pages/AdminProductReviews"));
+const AdminExtraCharges = lazy(() => import("@/pages/AdminExtraCharges"));
+
 
 const AdminLayout = lazy(() => import("@/components/AdminLayout"));
 import ScrollToTop from "@/components/ScrollToTop";
@@ -41,8 +47,29 @@ const AdminProtectedRoute = ({ children }: { children: React.ReactNode }) => {
 };
 
 const CartSyncProvider = ({ children }: { children: React.ReactNode }) => {
+  const { fetchSettings } = useSettingsStore();
   useCartSync();
+
+  useEffect(() => {
+    fetchSettings();
+
+    // Subscribe to real-time updates for tax changes
+    const channel = supabase
+      .channel('admin-settings')
+      .on('postgres_changes', 
+        { event: 'UPDATE', schema: 'public', table: 'admin_settings', filter: 'key=eq.tax_percentage' }, 
+        () => fetchSettings()
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [fetchSettings]);
+
+
   useBfcache(() => {
+
     // Global restoration logic can go here if needed
   });
   return <>{children}</>;
@@ -90,6 +117,8 @@ const App = () => (
               <Route path="user-doubts" element={<AdminUserDoubts />} />
               <Route path="enquiries" element={<AdminEnquiries />} />
               <Route path="product-reviews" element={<AdminProductReviews />} />
+              <Route path="extra-charges" element={<AdminExtraCharges />} />
+
             </Route>
 
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
