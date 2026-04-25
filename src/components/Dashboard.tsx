@@ -581,14 +581,12 @@ const Dashboard = () => {
                               </p>
                             )}
                             <div className="flex flex-col items-end gap-3 mt-2">
-                                {((order.displayFulfillmentStatus || '').toUpperCase() === 'FULFILLED' || 
-                                  (order.displayFulfillmentStatus || '').toUpperCase() === 'DELIVERED' || 
-                                  order.cancelledAt) && (
+                                {!order.cancelledAt && (
                                   <button 
                                     onClick={() => handleTrackOrder(order)}
                                     className="flex items-center gap-2 text-[10px] font-bold text-[#5A7A5C] uppercase tracking-widest hover:text-[#1A2E35] transition-colors"
                                   >
-                                    {order.cancelledAt ? 'View Cancelled Order' : 'Track My Order'} <ArrowRight className="h-3 w-3" />
+                                    Track My Order <ArrowRight className="h-3 w-3" />
                                   </button>
                                 )}
                               
