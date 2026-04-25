@@ -926,35 +926,6 @@ const ProductDetail = () => {
                         </div>
                       </div>
                     </div>
-                  </m.div>
-                )}
-
-                {activeTab === 'additional' && (
-                  <m.div
-                    key="additional"
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -10 }}
-                    className="space-y-16"
-                  >
-                    {/* Benefits Section */}
-                    {getMetafieldValue('benefits') && (
-                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
-                        {getMetafieldValue('benefits').split(/\n+/).map((benefit: string, i: number) => (
-                          <div 
-                            key={i} 
-                            className="bg-white/50 backdrop-blur-sm border border-[#F2EDE4] p-8 rounded-3xl flex flex-col items-center text-center group hover:bg-white hover:shadow-xl hover:shadow-[#5A7A5C]/5 hover:border-primary/20 transition-all duration-500"
-                          >
-                            <div className="h-14 w-14 rounded-full bg-secondary flex items-center justify-center text-primary mb-6 group-hover:scale-110 transition-transform duration-500">
-                              <CheckCircle2 className="h-6 w-6" />
-                            </div>
-                            <h4 className="font-sans-clean font-bold text-base md:text-lg text-[#1A2E35] tracking-tight leading-relaxed">
-                              {benefit}
-                            </h4>
-                          </div>
-                        ))}
-                      </div>
-                    )}
 
                     {/* Ingredients Section */}
                     {getMetafieldValue('ingredients') && (
@@ -989,6 +960,7 @@ const ProductDetail = () => {
                               { label: "Shelf Life", value: getMetafieldValue('shelf') },
                               { label: "Net Quantity", value: selectedMetafieldNetQty || getMetafieldValue('netquantity') },
                               { label: "Formulation Type", value: getMetafieldValue('formulationtype') || product.productType },
+                              { label: "Recommended Dosage", value: getMetafieldValue('dosage') },
                               { label: "Manufactured By", value: getMetafieldValue('manufacturedby') || product.vendor },
                             ].map((row, i) => (
                               <tr key={i} className={`border-b border-[#F2EDE4] last:border-none ${i % 2 === 0 ? 'bg-secondary/10' : ''}`}>
@@ -1004,6 +976,35 @@ const ProductDetail = () => {
                         </table>
                       </div>
                     </div>
+                  </m.div>
+                )}
+
+                {activeTab === 'additional' && (
+                  <m.div
+                    key="additional"
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -10 }}
+                    className="space-y-16"
+                  >
+                    {/* Benefits Section */}
+                    {getMetafieldValue('benefits') && (
+                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
+                        {getMetafieldValue('benefits').split(/\n+/).map((benefit: string, i: number) => (
+                          <div 
+                            key={i} 
+                            className="bg-white/50 backdrop-blur-sm border border-[#F2EDE4] p-8 rounded-3xl flex flex-col items-center text-center group hover:bg-white hover:shadow-xl hover:shadow-[#5A7A5C]/5 hover:border-primary/20 transition-all duration-500"
+                          >
+                            <div className="h-14 w-14 rounded-full bg-secondary flex items-center justify-center text-primary mb-6 group-hover:scale-110 transition-transform duration-500">
+                              <CheckCircle2 className="h-6 w-6" />
+                            </div>
+                            <h4 className="font-sans-clean font-bold text-base md:text-lg text-[#1A2E35] tracking-tight leading-relaxed">
+                              {benefit}
+                            </h4>
+                          </div>
+                        ))}
+                      </div>
+                    )}
                   </m.div>
                 )}
 
