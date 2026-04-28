@@ -187,7 +187,7 @@ const ProductCard = ({
               );
             })()}
           </div>
-          {variant?.compareAtPrice && parseFloat(variant.compareAtPrice.amount) > parseFloat(price?.amount || "0") && (
+          {variant?.compareAtPrice && parseFloat(variant.compareAtPrice.amount) > basePrice && (
             <span className="text-sm text-[#1A2E35]/60 line-through">
               {variant.compareAtPrice.currencyCode === 'INR' ? '₹' : variant.compareAtPrice.currencyCode} {parseFloat(variant.compareAtPrice.amount).toFixed(2)}
             </span>

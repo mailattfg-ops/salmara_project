@@ -1249,16 +1249,21 @@ const ProductDetail = () => {
                           </div>
                         )}
                       </div>
-                      <div className="p-5 space-y-2">
-                        <h3 className="text-lg font-display font-medium text-[#1A2E35] group-hover:text-[#5A7A5C] transition-colors line-clamp-1">
-                          {rp.title}
-                        </h3>
-                        {rpDisplayPrice > 0 && (
-                          <p className="text-sm font-bold text-[#C5A059]">
-                            {rpDisplayCurrency === "INR" ? "₹" : rpDisplayCurrency}{" "}
-                            {rpDisplayPrice.toFixed(2)}
-                          </p>
-                        )}
+                      <div className="p-5">
+                        <div className="flex justify-between items-start mb-2">
+                          <h3 className="font-display font-medium text-[#1A2E35] text-lg group-hover:text-[#5A7A5C] transition-colors line-clamp-1 flex-1">
+                            {rp.title}
+                          </h3>
+                          {rpDisplayPrice > 0 && (
+                            <div className="flex flex-col items-end ml-2 shrink-0">
+                              <span className="text-[#C5A059] font-sans-clean font-bold text-base md:text-lg leading-none">
+                                {rpDisplayCurrency === "INR" ? "₹" : rpDisplayCurrency}{" "}
+                                {(rpDisplayPrice * (1 + taxPercentage / 100)).toFixed(2)}
+                              </span>
+                              <span className="text-[8px] font-bold text-[#1A2E35]/30 uppercase tracking-tighter mt-1">Incl. {taxPercentage}% Taxes</span>
+                            </div>
+                          )}
+                        </div>
                         <p className="text-xs text-[#1A2E35]/50 line-clamp-2 font-sans-clean">
                           {rp.description || "Explore this formulation for your wellness goals."}
                         </p>

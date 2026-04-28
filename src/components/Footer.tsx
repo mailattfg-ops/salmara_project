@@ -118,25 +118,29 @@ const Footer = () => (
         </div>
       </div>
 
-      <div className="pt-6 md:pt-8 lg:pt-10 xl:pt-12 flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
-        <div className="flex flex-wrap items-center justify-start md:justify-end gap-6 md:gap-8 md:order-last w-full md:w-auto">
-          <div className="flex items-center gap-2 text-white/80">
-            <Lock className="h-5 w-5 text-[#C5A059]" />
-            <span className="text-xs sm:text-sm uppercase tracking-widest font-bold">Secure Payments</span>
-          </div>
-          <div className="flex items-center gap-2 text-white/80">
-            <Award className="h-5 w-5 text-[#C5A059]" />
-            <span className="text-xs sm:text-sm uppercase tracking-widest font-bold">AYUSH Approved</span>
-          </div>
-          <div className="flex items-center gap-2 text-white/80">
-            <BadgeCheck className="h-5 w-5 text-[#C5A059]" />
-            <span className="text-xs sm:text-sm uppercase tracking-widest font-bold">GMP Certified</span>
-          </div>
-        </div>
-
-        <p className="text-white/80 text-sm font-body text-left">
+      <div className="pt-6 md:pt-8 mt-8 md:mt-12 border-t border-white/10 flex flex-col lg:flex-row justify-between items-center gap-6 lg:gap-4">
+        <p className="text-white/80 text-sm font-body order-3 lg:order-1 shrink-0 text-center lg:text-left">
           © {new Date().getFullYear()} {siteConfig.name}. All Rights Reserved.
         </p>
+
+        <p className="text-white/80 text-sm font-body order-2 lg:order-2 shrink-0 text-center">
+          Designed & Developed by <a href="https://thinkforgeglobal.com" target="_blank" rel="noopener noreferrer" className="text-[#C5A059] hover:text-white font-bold transition-colors">Think Forge Global</a>
+        </p>
+
+        <div className="flex flex-wrap items-center justify-center lg:justify-end gap-x-4 xl:gap-x-6 gap-y-3 order-1 lg:order-3">
+          <div className="flex items-center gap-2 text-white/90">
+            <Lock className="h-4 w-4 text-[#C5A059] shrink-0" />
+            <span className="text-[10px] xl:text-xs uppercase tracking-widest font-bold whitespace-nowrap">Secure Payments</span>
+          </div>
+          <div className="flex items-center gap-2 text-white/90">
+            <Award className="h-4 w-4 text-[#C5A059] shrink-0" />
+            <span className="text-[10px] xl:text-xs uppercase tracking-widest font-bold whitespace-nowrap">AYUSH Approved</span>
+          </div>
+          <div className="flex items-center gap-2 text-white/90">
+            <BadgeCheck className="h-4 w-4 text-[#C5A059] shrink-0" />
+            <span className="text-[10px] xl:text-xs uppercase tracking-widest font-bold whitespace-nowrap">GMP Certified</span>
+          </div>
+        </div>
       </div>
     </div>
   </footer>
