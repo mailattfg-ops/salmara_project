@@ -38,7 +38,8 @@ import {
   Zap,
   Wind,
   Sparkles,
-  Stethoscope
+  Stethoscope,
+  Award
 } from "lucide-react";
 import { toast } from "sonner";
 import Header from "@/components/Header";
@@ -861,24 +862,27 @@ const ProductDetail = () => {
           </div>
 
           {/* Tabs Section */}
-          <div className="mt-16 md:mt-24">
-            <div className="flex items-center justify-center border-b border-[#F2EDE4] mb-12">
-              <div className="flex gap-6 md:gap-12 flex-wrap justify-center">
+          <div className="mt-16 md:mt-24 max-w-5xl mx-auto">
+            <div className="flex items-center justify-center mb-12">
+              <div className="flex gap-2 md:gap-4 flex-wrap justify-center bg-[#FDFBF7] p-2 rounded-[2rem] border border-[#F2EDE4] shadow-sm">
                 {(['description', 'additional', 'shipping', 'faq', 'reviews'] as const).map((tab) => (
                   <button
                     key={tab}
                     onClick={() => setActiveTab(tab)}
-                    className={`pb-4 text-[10px] md:text-xs font-bold uppercase tracking-[0.2em] transition-all relative whitespace-nowrap ${
-                      activeTab === tab ? 'text-primary' : 'text-[#1A2E35]/30 hover:text-[#1A2E35]'
+                    className={`relative px-6 py-3 md:px-8 md:py-4 rounded-[1.5rem] text-[10px] md:text-xs font-bold uppercase tracking-[0.2em] transition-all whitespace-nowrap ${
+                      activeTab === tab ? 'text-white' : 'text-[#1A2E35]/50 hover:text-[#1A2E35]'
                     }`}
                   >
-                    {tab === 'shipping' ? 'Shipping & Returns' : tab === 'faq' ? 'FAQ' : tab === 'additional' ? 'Ingredients & Benefits' : tab}
                     {activeTab === tab && (
                       <m.div 
-                        layoutId="activeTab"
-                        className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary rounded-full" 
+                        layoutId="activeTabBackground"
+                        className="absolute inset-0 bg-[#5A7A5C] rounded-[1.5rem] shadow-md" 
+                        transition={{ type: "spring", stiffness: 300, damping: 30 }}
                       />
                     )}
+                    <span className="relative z-10">
+                      {tab === 'shipping' ? 'Shipping & Returns' : tab === 'faq' ? 'FAQ' : tab === 'additional' ? 'Ingredients & Benefits' : tab}
+                    </span>
                   </button>
                 ))}
               </div>
@@ -894,92 +898,154 @@ const ProductDetail = () => {
                     exit={{ opacity: 0, y: -10 }}
                     className="space-y-12"
                   >
-                    <div 
-                      className="text-sm md:text-base text-[#1A2E35]/70 font-sans-clean leading-relaxed product-description max-w-none"
-                      dangerouslySetInnerHTML={{ __html: product.descriptionHtml || product.description }}
-                    />
+                    <div className="prose prose-lg max-w-4xl mx-auto prose-p:text-[#1A2E35]/70 prose-p:leading-relaxed prose-headings:font-display prose-headings:text-[#1A2E35] prose-a:text-[#5A7A5C] prose-strong:text-[#1A2E35]">
+                      <div 
+                        className="font-sans-clean text-base md:text-lg product-description"
+                        dangerouslySetInnerHTML={{ __html: product.descriptionHtml || product.description }}
+                      />
+                    </div>
 
                     {/* Clinical Insight */}
-                    <div className="bg-[#5A7A5C]/5 border border-[#5A7A5C]/10 rounded-3xl p-8 md:p-12">
-                      <div className="grid lg:grid-cols-2 gap-12 items-center">
-                        <div className="space-y-6">
-                          <div className="flex items-center gap-3">
-                            <Stethoscope className="h-5 w-5 text-[#5A7A5C]" />
-                            <h2 className="text-[10px] font-bold uppercase tracking-[0.3em] text-[#5A7A5C]">Doctor's Insight</h2>
+                    <div className="relative overflow-hidden rounded-[2.5rem] bg-gradient-to-br from-[#FDFBF7] to-white border border-[#F2EDE4] shadow-xl shadow-[#5A7A5C]/5 p-10 md:p-16">
+                      <div className="absolute top-0 right-0 w-64 h-64 bg-[#5A7A5C]/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
+                      <div className="absolute bottom-0 left-0 w-64 h-64 bg-[#C5A059]/5 rounded-full blur-3xl translate-y-1/2 -translate-x-1/2" />
+                      
+                      <div className="grid lg:grid-cols-12 gap-12 items-center relative z-10">
+                        <div className="lg:col-span-7 space-y-8">
+                          <div className="inline-flex items-center gap-3 px-4 py-2 bg-white rounded-full shadow-sm border border-[#F2EDE4]">
+                            <div className="h-6 w-6 rounded-full bg-[#5A7A5C]/10 flex items-center justify-center">
+                              <Stethoscope className="h-3 w-3 text-[#5A7A5C]" />
+                            </div>
+                            <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-[#5A7A5C]">Doctor's Insight</span>
                           </div>
+                          
                           {getMetafieldValue('doctorsinsight') ? (
-                            <p className="text-lg text-[#1A2E35]/80 font-sans-clean italic leading-relaxed">
-                              "{getMetafieldValue('doctorsinsight')}"
-                            </p>
+                            <div className="relative">
+                              <span className="absolute -top-6 -left-4 text-6xl text-[#C5A059]/20 font-serif leading-none">"</span>
+                              <p className="text-xl md:text-2xl text-[#1A2E35] font-display font-medium leading-relaxed italic relative z-10 pl-6">
+                                {getMetafieldValue('doctorsinsight')}
+                              </p>
+                            </div>
                           ) : (
                             <p className="text-sm text-[#1A2E35]/40 italic">Expert clinical analysis for this formulation is being finalized.</p>
                           )}
                         </div>
-                        <div className="bg-white rounded-2xl p-6 border border-[#5A7A5C]/10 shadow-sm">
-                          <h3 className="text-xs font-bold text-[#1A2E35] uppercase tracking-widest mb-2">Need Personalized Advice?</h3>
-                          <p className="text-xs text-[#1A2E35]/50 mb-6 font-sans-clean">Connect with our Ayurvedic practitioners for guidance on this formulation.</p>
-                          <a 
-                            href={`https://wa.me/919353436373?text=${encodeURIComponent(`Hello Salmara Team, I would like to consult a doctor regarding ${product.title}.`)}`}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="inline-flex items-center gap-2 text-xs font-bold text-primary uppercase tracking-widest border-b border-primary pb-1 hover:gap-3 transition-all"
-                          >
-                            Consult via WhatsApp <ArrowRight className="h-3 w-3" />
-                          </a>
+                        
+                        <div className="lg:col-span-5">
+                          <div className="bg-white/80 backdrop-blur-md rounded-3xl p-8 border border-white shadow-lg">
+                            <div className="h-12 w-12 bg-[#5A7A5C]/10 rounded-2xl flex items-center justify-center mb-6">
+                              <MessageCircle className="h-6 w-6 text-[#5A7A5C]" />
+                            </div>
+                            <h3 className="text-sm font-bold text-[#1A2E35] uppercase tracking-widest mb-3">Need Personalized Advice?</h3>
+                            <p className="text-sm text-[#1A2E35]/60 mb-8 font-sans-clean leading-relaxed">Connect directly with our Ayurvedic practitioners for specific guidance on incorporating this formulation into your routine.</p>
+                            <a 
+                              href={`https://wa.me/919353436373?text=${encodeURIComponent(`Hello Salmara Team, I would like to consult a doctor regarding ${product.title}.`)}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="w-full bg-[#1A2E35] text-white px-6 py-4 rounded-xl text-xs font-bold uppercase tracking-widest hover:bg-[#5A7A5C] transition-all flex items-center justify-center gap-3 group shadow-xl shadow-[#1A2E35]/10"
+                            >
+                              Consult via WhatsApp 
+                              <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
+                            </a>
+                          </div>
                         </div>
                       </div>
                     </div>
 
 
-                    {/* Technical Specs Table */}
-                    <div className="pt-12 border-t border-[#F2EDE4]">
-                      <h3 className="text-xs font-bold uppercase tracking-[0.3em] text-[#1A2E35]/30 mb-8">Product Specifications</h3>
-                      <div className="overflow-hidden rounded-2xl border border-[#F2EDE4]">
-                        <table className="w-full text-left bg-white">
-                          <tbody>
-                            {[
-                              { label: "Formulation Type", value: getMetafieldValue('formulationtype') || product.productType },
-                              { label: "Net Quantity", value: selectedMetafieldNetQty || getMetafieldValue('netquantity') },
-                              { label: "Usage", value: getMetafieldValue('usage') },
-                              { label: "Recommended Dosage", value: getMetafieldValue('dosage') },
-                              { label: "Shelf Life", value: getMetafieldValue('shelf') },
-                              { label: "Country of Origin", value: getMetafieldValue('countryoforigin') },
-                              { label: "Vendor", value: product.vendor },
-                              { label: "Manufactured By", value: getMetafieldValue('manufacturedby') || product.vendor },
-                              { label: "License Number", value: getMetafieldValue('licenseno') },
-                              { label: "Batch Number", value: getMetafieldValue('batchno') },
-                            ].map((row, i) => (
-                              <tr key={i} className={`border-b border-[#F2EDE4] last:border-none ${i % 2 === 0 ? 'bg-secondary/10' : ''}`}>
-                                <th className="py-5 px-8 text-[10px] font-bold text-[#1A2E35] uppercase tracking-[0.2em] w-1/3 font-sans-clean">
-                                  {row.label}
-                                </th>
-                                <td className="py-5 px-8 text-sm text-[#1A2E35]/70 font-sans-clean italic">
-                                  {row.value || "-"}
-                                </td>
-                              </tr>
-                            ))}
-                          </tbody>
-                        </table>
+                    {/* Technical Specs Grid */}
+                    <div className="pt-16 border-t border-[#F2EDE4]">
+                      <div className="flex items-center justify-between mb-10">
+                        <h3 className="text-2xl md:text-3xl font-display font-medium text-[#1A2E35]">Product Details</h3>
+                        <div className="hidden md:flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest text-[#C5A059]">
+                          <ShieldCheck className="h-4 w-4" /> Authenticity Guaranteed
+                        </div>
+                      </div>
+                      
+                      {getMetafieldValue('usage') && (
+                        <div className="mb-4 group relative overflow-hidden bg-[#FDFBF7] rounded-3xl p-6 md:p-8 border border-[#F2EDE4] hover:bg-[#5A7A5C] hover:border-[#5A7A5C] transition-all duration-500">
+                          <div className="absolute right-0 top-1/2 -translate-y-1/2 opacity-5 group-hover:opacity-20 group-hover:scale-150 transition-all duration-700 text-[#1A2E35] group-hover:text-white -mr-8">
+                            <Activity className="h-32 w-32" />
+                          </div>
+                          <div className="relative z-10">
+                            <div className="flex items-center gap-4 mb-4">
+                              <div className="text-[#C5A059] group-hover:text-white/80 transition-colors">
+                                <Activity className="h-6 w-6" />
+                              </div>
+                              <h4 className="text-[10px] font-bold uppercase tracking-[0.2em] text-[#1A2E35]/40 group-hover:text-white/60 transition-colors">Usage Instructions</h4>
+                            </div>
+                            <p className="text-base md:text-lg font-sans-clean font-medium text-[#1A2E35] group-hover:text-white transition-colors leading-relaxed max-w-3xl">
+                              {getMetafieldValue('usage')}
+                            </p>
+                          </div>
+                        </div>
+                      )}
+                      
+                      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                        {[
+                          { label: "Formulation", value: getMetafieldValue('formulationtype') || product.productType, icon: <Package className="h-6 w-6" /> },
+                          { label: "Quantity", value: selectedMetafieldNetQty || getMetafieldValue('netquantity'), icon: <Droplets className="h-6 w-6" /> },
+                          { label: "Dosage", value: getMetafieldValue('dosage'), icon: <Leaf className="h-6 w-6" /> },
+                          { label: "Shelf Life", value: getMetafieldValue('shelf'), icon: <Wind className="h-6 w-6" /> },
+                          { label: "Origin", value: getMetafieldValue('countryoforigin'), icon: <Sparkles className="h-6 w-6" /> },
+                          { label: "Vendor", value: product.vendor, icon: <ShieldCheck className="h-6 w-6" /> },
+                          { label: "Manufactured By", value: getMetafieldValue('manufacturedby') || product.vendor, icon: <Activity className="h-6 w-6" /> },
+                          { label: "License No.", value: getMetafieldValue('licenseno'), icon: <Award className="h-6 w-6" /> },
+                          { label: "Batch No.", value: getMetafieldValue('batchno'), icon: <Package className="h-6 w-6" /> },
+                        ].filter(item => item.value).map((row, i) => (
+                          <div key={i} className="group relative overflow-hidden bg-[#FDFBF7] rounded-3xl p-6 border border-[#F2EDE4] hover:bg-[#5A7A5C] hover:border-[#5A7A5C] transition-all duration-500">
+                            <div className="absolute -right-4 -bottom-4 opacity-5 group-hover:opacity-20 group-hover:scale-150 transition-all duration-700 text-[#1A2E35] group-hover:text-white">
+                              {row.icon}
+                            </div>
+                            <div className="relative z-10">
+                              <div className="text-[#C5A059] mb-4 group-hover:text-white/80 transition-colors">
+                                {row.icon}
+                              </div>
+                              <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-[#1A2E35]/40 group-hover:text-white/60 mb-1 transition-colors">
+                                {row.label}
+                              </p>
+                              <p className="text-sm md:text-base font-sans-clean font-medium text-[#1A2E35] group-hover:text-white transition-colors">
+                                {row.value || "-"}
+                              </p>
+                            </div>
+                          </div>
+                        ))}
                       </div>
                     </div>
 
                     {/* Additional Notes Section */}
                     {getMetafieldValue('warnings') && (
-                      <div className="pt-12 border-t border-[#F2EDE4]">
-                        <div className="flex items-center gap-3 mb-8">
-                          <AlertCircle className="h-5 w-5 text-destructive/60" />
-                          <h3 className="text-xs font-bold uppercase tracking-[0.3em] text-[#1A2E35]/30">Additional Notes</h3>
-                        </div>
-                        <div className="bg-destructive/5 border border-destructive/10 rounded-2xl p-6 md:p-8">
-                          <div className="space-y-4">
-                            {getMetafieldValue('warnings').split(/\n+/).map((note: string, i: number) => (
-                              <div key={i} className="flex gap-3 items-start">
-                                <div className="h-1.5 w-1.5 rounded-full bg-destructive/40 mt-2 shrink-0" />
-                                <p className="text-sm text-[#1A2E35]/70 font-sans-clean leading-relaxed italic">
-                                  {note.trim()}
-                                </p>
+                      <div className="pt-16 mt-16 border-t border-[#F2EDE4]">
+                        <div className="relative bg-gradient-to-br from-[#FFF5F5] to-white border border-[#FFEBEB] rounded-[2.5rem] p-8 md:p-12 overflow-hidden shadow-sm">
+                          <div className="absolute top-0 right-0 p-8 opacity-5">
+                            <AlertCircle className="w-64 h-64 text-[#DC2626]" />
+                          </div>
+                          
+                          <div className="relative z-10 flex flex-col md:flex-row gap-8 md:gap-12 items-start">
+                            <div className="flex-shrink-0">
+                              <div className="h-16 w-16 bg-[#DC2626]/10 rounded-2xl flex items-center justify-center">
+                                <AlertCircle className="h-8 w-8 text-[#DC2626]" />
                               </div>
-                            ))}
+                            </div>
+                            
+                            <div className="space-y-6 flex-1">
+                              <div>
+                                <h3 className="text-[10px] font-bold uppercase tracking-[0.3em] text-[#DC2626] mb-2">Important Considerations</h3>
+                                <h4 className="text-2xl font-display font-medium text-[#1A2E35]">Safety & Usage Guidelines</h4>
+                              </div>
+                              <div className="grid gap-4">
+                                {getMetafieldValue('warnings').split(/\n+/).map((note: string, i: number) => (
+                                  <div key={i} className="flex gap-4 items-start bg-white/60 p-5 rounded-2xl border border-[#FFEBEB]/50 backdrop-blur-sm shadow-sm">
+                                    <div className="h-6 w-6 rounded-full bg-[#DC2626]/10 flex items-center justify-center shrink-0 mt-0.5">
+                                      <span className="text-[#DC2626] text-[10px] font-bold">{i + 1}</span>
+                                    </div>
+                                    <p className="text-sm text-[#1A2E35]/80 font-sans-clean leading-relaxed">
+                                      {note.trim()}
+                                    </p>
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
                           </div>
                         </div>
                       </div>
@@ -997,20 +1063,26 @@ const ProductDetail = () => {
                   >
                     {/* Ingredients Section */}
                     {getMetafieldValue('ingredients') && (
-                      <div className="space-y-8">
-                        <h3 className="text-xs font-bold uppercase tracking-[0.3em] text-[#1A2E35]/30 mb-8">Key Ingredients</h3>
-                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-x-8 gap-y-10">
+                      <div className="space-y-10">
+                        <div className="flex items-center gap-3">
+                          <Leaf className="h-5 w-5 text-[#5A7A5C]" />
+                          <h3 className="text-xs font-bold uppercase tracking-[0.3em] text-[#1A2E35]">Key Ingredients</h3>
+                        </div>
+                        
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                           {getMetafieldValue('ingredients').split(/\n+/).map((line: string, i: number) => {
                             const [name, ...descParts] = line.trim().split(/\s*[—–-]\s*/);
                             return (
-                              <div key={i} className="flex gap-3 md:gap-4 items-start group">
-                                <div className="h-9 w-9 md:h-10 md:w-10 rounded-full bg-secondary flex items-center justify-center shrink-0 mt-0.5 group-hover:bg-primary/10 transition-colors">
-                                  <Leaf className="h-3 w-3 md:h-4 md:w-4 text-primary" />
+                              <div key={i} className="bg-white rounded-3xl p-6 border border-[#F2EDE4] shadow-sm hover:shadow-xl hover:border-[#5A7A5C]/20 transition-all duration-300 group">
+                                <div className="h-12 w-12 rounded-2xl bg-[#5A7A5C]/5 flex items-center justify-center mb-5 group-hover:bg-[#5A7A5C]/10 transition-colors">
+                                  <Leaf className="h-5 w-5 text-[#5A7A5C]" />
                                 </div>
-                                <div>
-                                  <p className="text-sm md:text-base font-bold text-[#1A2E35] uppercase tracking-wider mb-2 leading-snug">{name}</p>
-                                  {descParts.length > 0 && <p className="text-[11px] md:text-sm text-[#1A2E35]/80 font-sans-clean leading-relaxed">{descParts.join(' — ')}</p>}
-                                </div>
+                                <h4 className="text-lg font-display font-medium text-[#1A2E35] mb-3">{name}</h4>
+                                {descParts.length > 0 && (
+                                  <p className="text-sm text-[#1A2E35]/70 font-sans-clean leading-relaxed">
+                                    {descParts.join(' — ')}
+                                  </p>
+                                )}
                               </div>
                             );
                           })}
@@ -1020,25 +1092,31 @@ const ProductDetail = () => {
                     )}
                     {/* Benefits Section */}
                     {getMetafieldValue('benefits') && (
-                      <div className="space-y-8">
-                        <h3 className="text-xs font-bold uppercase tracking-[0.3em] text-[#1A2E35]/30 mb-8">Key Benefits</h3>
+                      <div className="space-y-10">
+                        <div className="flex items-center gap-3 text-center justify-center mb-4">
+                          <Sparkles className="h-5 w-5 text-[#C5A059]" />
+                          <h3 className="text-xs font-bold uppercase tracking-[0.3em] text-[#1A2E35]">Transformative Benefits</h3>
+                        </div>
                         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
-                        {getMetafieldValue('benefits').split(/\n+/).map((benefit: string, i: number) => (
-                          <div 
-                            key={i} 
-                            className="bg-white/50 backdrop-blur-sm border border-[#F2EDE4] p-8 rounded-3xl flex flex-col items-center text-center group hover:bg-white hover:shadow-xl hover:shadow-[#5A7A5C]/5 hover:border-primary/20 transition-all duration-500"
-                          >
-                            <div className="h-14 w-14 rounded-full bg-secondary flex items-center justify-center text-primary mb-6 group-hover:scale-110 transition-transform duration-500">
-                              <CheckCircle2 className="h-6 w-6" />
+                          {getMetafieldValue('benefits').split(/\n+/).map((benefit: string, i: number) => (
+                            <div 
+                              key={i} 
+                              className="bg-white p-8 rounded-3xl flex flex-col items-center text-center group hover:-translate-y-2 transition-all duration-500 relative overflow-hidden shadow-sm border border-[#F2EDE4]"
+                            >
+                              <div className="absolute inset-0 bg-gradient-to-br from-[#FDFBF7] to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                              <div className="absolute top-0 left-1/2 -translate-x-1/2 w-1/2 h-1 bg-gradient-to-r from-transparent via-[#C5A059] to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                              
+                              <div className="h-16 w-16 rounded-full bg-[#C5A059]/10 flex items-center justify-center text-[#C5A059] mb-6 relative z-10 group-hover:scale-110 transition-transform duration-500 shadow-inner">
+                                {getBenefitIcon(benefit)}
+                              </div>
+                              <h4 className="font-sans-clean font-medium text-lg text-[#1A2E35] tracking-tight leading-relaxed relative z-10">
+                                {benefit}
+                              </h4>
                             </div>
-                            <h4 className="font-sans-clean font-bold text-base md:text-lg text-[#1A2E35] tracking-tight leading-relaxed">
-                              {benefit}
-                            </h4>
-                          </div>
-                        ))}
+                          ))}
+                        </div>
                       </div>
-                    </div>
-                  )}
+                    )}
                   </m.div>
                 )}
 
