@@ -1,5 +1,5 @@
 import { VercelRequest, VercelResponse } from '@vercel/node';
-import { getSupabaseClient } from './lib/supabase';
+import { getSupabaseClient } from './lib/supabase.js';
 
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
@@ -36,9 +36,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       .from('contact_us')
 
       .insert([
-        { 
+        {
           name,
-          email: email.toLowerCase(), 
+          email: email.toLowerCase(),
           phone_number,
           category,
           user_text,

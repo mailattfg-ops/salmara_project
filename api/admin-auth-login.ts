@@ -1,5 +1,5 @@
 import { VercelRequest, VercelResponse } from '@vercel/node';
-import { getSupabaseClient } from './lib/supabase';
+import { getSupabaseClient } from './lib/supabase.js';
 import bcrypt from 'bcryptjs';
 
 
@@ -25,7 +25,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
   try {
     const { email, password } = req.body;
-    
+
     // Get lazily initialized client (centralized helper)
     const supabase = getSupabaseClient();
 
@@ -50,7 +50,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     // Extract role name safely
     const roleData = user.roles;
     const roleName = Array.isArray(roleData) ? roleData[0]?.role_name : roleData?.role_name;
-    
+
     console.log("[ADMIN LOGIN DEBUG] Detected Role:", roleName);
 
     if (!roleName || roleName.toLowerCase() !== "admin") {
