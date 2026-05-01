@@ -595,6 +595,32 @@ const ProductDetail = () => {
     setZoomPosition({ x, y });
   };
 
+  const faq1Raw = getMetafieldValue('faq01') || getMetafieldValue('faq_01');
+  const faq2Raw = getMetafieldValue('faq02') || getMetafieldValue('faq_02');
+  const faq3Raw = getMetafieldValue('faq03') || getMetafieldValue('faq_03');
+  const faq4Raw = getMetafieldValue('faq04') || getMetafieldValue('faq_04');
+  const faq5Raw = getMetafieldValue('faq05') || getMetafieldValue('faq_05');
+  const faq6Raw = getMetafieldValue('faq06') || getMetafieldValue('faq_06');
+  
+  const parseFaq = (raw: string | null) => {
+    if (!raw) return null;
+    const match = raw.match(/^(.*?)(?:\r?\n)([\s\S]*)$/);
+    if (match) {
+        return { q: match[1].trim(), a: match[2].trim() };
+    }
+    return { q: raw, a: "" };
+  };
+
+  const dynamicFaqs = [
+    parseFaq(faq1Raw), 
+    parseFaq(faq2Raw),
+    parseFaq(faq3Raw),
+    parseFaq(faq4Raw),
+    parseFaq(faq5Raw),
+    parseFaq(faq6Raw)
+  ].filter(Boolean) as {q: string, a: string}[];
+  const displayFaqs = dynamicFaqs.length > 0 ? dynamicFaqs : faqs;
+
   const currentUrl = window.location.href;
   const productDescription = product.description?.substring(0, 160) || "";
   const productImage = images[0]?.node?.url || "";
@@ -1166,7 +1192,7 @@ const ProductDetail = () => {
                       <h2 className="text-2xl font-display font-medium text-[#1A2E35]">Frequently Asked Questions</h2>
                     </div>
                     <div className="space-y-4">
-                      {faqs.map((faq, i) => (
+                      {displayFaqs.map((faq, i) => (
                         <div key={i} className="border border-[#F2EDE4] rounded-2xl overflow-hidden bg-white shadow-sm hover:border-primary/20 transition-all">
                           <button 
                             onClick={() => setActiveFaq(activeFaq === i ? null : i)}
