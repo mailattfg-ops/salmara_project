@@ -455,14 +455,8 @@ const ProductDetail = () => {
     return node ? node.value : null;
   };
 
-  const getBenefitIcon = (text: string) => {
-    const t = text.toLowerCase();
-    if (t.includes('bleeding') || t.includes('blood') || t.includes('digestion') || t.includes('stomach')) return <Droplets className="h-4 w-4" />;
-    if (t.includes('energy') || t.includes('stamina') || t.includes('metabolism')) return <Zap className="h-4 w-4" />;
-    if (t.includes('lung') || t.includes('breathing') || t.includes('respiratory')) return <Wind className="h-4 w-4" />;
-    if (t.includes('skin') || t.includes('glow') || t.includes('detox')) return <Sparkles className="h-4 w-4" />;
-    if (t.includes('heart') || t.includes('stress') || t.includes('mind')) return <Heart className="h-4 w-4" />;
-    return <Activity className="h-4 w-4" />;
+  const getBenefitIcon = (_text: string) => {
+    return <Sparkles className="h-4 w-4" />;
   };
 
   const firstHighlight = getMetafieldValue('keyhighlights')?.split(/\n+/)[0]?.trim();
@@ -665,7 +659,7 @@ const ProductDetail = () => {
             <span className="text-[#1A2E35]">{product.title}</span>
           </nav>
 
-          <div className="grid lg:grid-cols-2 gap-6 md:gap-8 lg:gap-10 xl:gap-12 mb-6 md:mb-8 lg:mb-10 xl:mb-12">
+          <div className="grid md:grid-cols-2 gap-6 md:gap-8 lg:gap-10 xl:gap-12 mb-6 md:mb-8 lg:mb-10 xl:mb-12">
             <div className="space-y-6">
               <div className="sticky top-32">
                 <m.div 
@@ -732,7 +726,7 @@ const ProductDetail = () => {
                   </m.div>
                 )}
                 
-                <h1 className="text-3xl md:text-4xl lg:text-5xl font-display font-medium text-[#1A2E35] leading-tight tracking-tight">
+                <h1 className="text-2xl md:text-3xl lg:text-5xl font-display font-medium text-[#1A2E35] leading-tight tracking-tight">
                   {product.title}
                 </h1>
 
@@ -768,7 +762,7 @@ const ProductDetail = () => {
                 
                 <div className="flex items-baseline gap-3 pt-2">
                   <div className="flex flex-col">
-                    <span className="text-3xl font-sans-clean font-bold text-[#C5A059]">
+                    <span className="text-2xl md:text-3xl font-sans-clean font-bold text-[#C5A059]">
                       {selectedVariant?.price.currencyCode === 'INR' ? '₹' : selectedVariant?.price.currencyCode}{' '}
                       {((hasValidMetafieldPrice && usesMetafieldVariantOptions ? selectedMetafieldPrice : parseFloat(selectedVariant?.price.amount || "0")) * (1 + taxPercentage / 100)).toFixed(2)}
                     </span>
@@ -776,14 +770,14 @@ const ProductDetail = () => {
                   </div>
                   
                   {selectedVariant?.compareAtPrice && parseFloat(selectedVariant.compareAtPrice.amount) > parseFloat(selectedVariant.price.amount) && (
-                    <span className="text-3xl text-[#1A2E35]/60 line-through">
+                    <span className="text-2xl md:text-3xl text-[#1A2E35]/60 line-through">
                       {selectedVariant.compareAtPrice.currencyCode === 'INR' ? '₹' : selectedVariant.compareAtPrice.currencyCode}{' '}
                       {(parseFloat(selectedVariant.compareAtPrice.amount) * (1 + taxPercentage / 100)).toFixed(2)}
                     </span>
                   )}
                 </div>
 
-                <p className="text-base text-[#1A2E35]/60 font-sans-clean leading-relaxed max-w-lg">
+                <p className="text-sm md:text-base text-[#1A2E35]/60 font-sans-clean leading-relaxed max-w-lg">
                    {highlightLine}
                 </p>
               </div>
@@ -888,7 +882,7 @@ const ProductDetail = () => {
           </div>
 
           {/* Tabs Section */}
-          <div className="mt-16 md:mt-24 max-w-5xl mx-auto">
+          <div className="mt-10 md:mt-16 lg:mt-24 max-w-5xl mx-auto">
             <div className="flex items-center justify-center mb-12">
               <div className="flex gap-2 md:gap-4 flex-wrap justify-center bg-[#FDFBF7] p-2 rounded-[2rem] border border-[#F2EDE4] shadow-sm">
                 {(['description', 'additional', 'shipping', 'faq', 'reviews'] as const).map((tab) => (
@@ -932,7 +926,7 @@ const ProductDetail = () => {
                     </div>
 
                     {/* Clinical Insight */}
-                    <div className="relative overflow-hidden rounded-[2.5rem] bg-gradient-to-br from-[#FDFBF7] to-white border border-[#F2EDE4] shadow-xl shadow-[#5A7A5C]/5 p-10 md:p-16">
+                    <div className="relative overflow-hidden rounded-[2.5rem] bg-gradient-to-br from-[#FDFBF7] to-white border border-[#F2EDE4] shadow-xl shadow-[#5A7A5C]/5 p-6 md:p-10 lg:p-16">
                       <div className="absolute top-0 right-0 w-64 h-64 bg-[#5A7A5C]/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
                       <div className="absolute bottom-0 left-0 w-64 h-64 bg-[#C5A059]/5 rounded-full blur-3xl translate-y-1/2 -translate-x-1/2" />
                       
@@ -982,14 +976,14 @@ const ProductDetail = () => {
                     {/* Technical Specs Grid */}
                     <div className="pt-16 border-t border-[#F2EDE4]">
                       <div className="flex items-center justify-between mb-10">
-                        <h3 className="text-2xl md:text-3xl font-display font-medium text-[#1A2E35]">Product Details</h3>
+                        <h3 className="text-xl md:text-2xl lg:text-3xl font-display font-medium text-[#1A2E35]">Product Details</h3>
                         <div className="hidden md:flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest text-[#C5A059]">
                           <ShieldCheck className="h-4 w-4" /> Authenticity Guaranteed
                         </div>
                       </div>
                       
                       {getMetafieldValue('usage') && (
-                        <div className="mb-4 group relative overflow-hidden bg-[#FDFBF7] rounded-3xl p-6 md:p-8 border border-[#F2EDE4] hover:bg-[#5A7A5C] hover:border-[#5A7A5C] transition-all duration-500">
+                        <div className="mb-4 group relative overflow-hidden bg-[#FDFBF7] rounded-3xl p-5 md:p-6 lg:p-8 border border-[#F2EDE4] hover:bg-[#5A7A5C] hover:border-[#5A7A5C] transition-all duration-500">
                           <div className="absolute right-0 top-1/2 -translate-y-1/2 opacity-5 group-hover:opacity-20 group-hover:scale-150 transition-all duration-700 text-[#1A2E35] group-hover:text-white -mr-8">
                             <Activity className="h-32 w-32" />
                           </div>
@@ -1000,7 +994,7 @@ const ProductDetail = () => {
                               </div>
                               <h4 className="text-[10px] font-bold uppercase tracking-[0.2em] text-[#1A2E35]/40 group-hover:text-white/60 transition-colors">Usage Instructions</h4>
                             </div>
-                            <p className="text-base md:text-lg font-sans-clean font-medium text-[#1A2E35] group-hover:text-white transition-colors leading-relaxed max-w-3xl">
+                            <p className="text-sm md:text-base lg:text-lg font-sans-clean font-medium text-[#1A2E35] group-hover:text-white transition-colors leading-relaxed max-w-3xl">
                               {getMetafieldValue('usage')}
                             </p>
                           </div>
@@ -1042,7 +1036,7 @@ const ProductDetail = () => {
                     {/* Additional Notes Section */}
                     {getMetafieldValue('warnings') && (
                       <div className="pt-16 mt-16 border-t border-[#F2EDE4]">
-                        <div className="relative bg-gradient-to-br from-[#FFF5F5] to-white border border-[#FFEBEB] rounded-[2.5rem] p-8 md:p-12 overflow-hidden shadow-sm">
+                        <div className="relative bg-gradient-to-br from-[#FFF5F5] to-white border border-[#FFEBEB] rounded-[2.5rem] p-6 md:p-8 lg:p-12 overflow-hidden shadow-sm">
                           <div className="absolute top-0 right-0 p-8 opacity-5">
                             <AlertCircle className="w-64 h-64 text-[#DC2626]" />
                           </div>
@@ -1057,7 +1051,7 @@ const ProductDetail = () => {
                             <div className="space-y-6 flex-1">
                               <div>
                                 <h3 className="text-[10px] font-bold uppercase tracking-[0.3em] text-[#DC2626] mb-2">Important Considerations</h3>
-                                <h4 className="text-2xl font-display font-medium text-[#1A2E35]">Safety & Usage Guidelines</h4>
+                                <h4 className="text-xl md:text-2xl font-display font-medium text-[#1A2E35]">Safety & Usage Guidelines</h4>
                               </div>
                               <div className="grid gap-4">
                                 {getMetafieldValue('warnings').split(/\n+/).map((note: string, i: number) => (
@@ -1103,7 +1097,7 @@ const ProductDetail = () => {
                                 <div className="h-12 w-12 rounded-2xl bg-[#5A7A5C]/5 flex items-center justify-center mb-5 group-hover:bg-[#5A7A5C]/10 transition-colors">
                                   <Leaf className="h-5 w-5 text-[#5A7A5C]" />
                                 </div>
-                                <h4 className="text-lg font-display font-medium text-[#1A2E35] mb-3">{name}</h4>
+                                <h4 className="text-base md:text-lg font-display font-medium text-[#1A2E35] mb-3">{name}</h4>
                                 {descParts.length > 0 && (
                                   <p className="text-sm text-[#1A2E35]/70 font-sans-clean leading-relaxed">
                                     {descParts.join(' — ')}
@@ -1127,7 +1121,7 @@ const ProductDetail = () => {
                           {getMetafieldValue('benefits').split(/\n+/).map((benefit: string, i: number) => (
                             <div 
                               key={i} 
-                              className="bg-white p-8 rounded-3xl flex flex-col items-center text-center group hover:-translate-y-2 transition-all duration-500 relative overflow-hidden shadow-sm border border-[#F2EDE4]"
+                              className="bg-white p-6 md:p-8 rounded-3xl flex flex-col items-center text-center group hover:-translate-y-2 transition-all duration-500 relative overflow-hidden shadow-sm border border-[#F2EDE4]"
                             >
                               <div className="absolute inset-0 bg-gradient-to-br from-[#FDFBF7] to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
                               <div className="absolute top-0 left-1/2 -translate-x-1/2 w-1/2 h-1 bg-gradient-to-r from-transparent via-[#C5A059] to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
@@ -1135,7 +1129,7 @@ const ProductDetail = () => {
                               <div className="h-16 w-16 rounded-full bg-[#C5A059]/10 flex items-center justify-center text-[#C5A059] mb-6 relative z-10 group-hover:scale-110 transition-transform duration-500 shadow-inner">
                                 {getBenefitIcon(benefit)}
                               </div>
-                              <h4 className="font-sans-clean font-medium text-lg text-[#1A2E35] tracking-tight leading-relaxed relative z-10">
+                              <h4 className="font-sans-clean font-medium text-base md:text-lg text-[#1A2E35] tracking-tight leading-relaxed relative z-10">
                                 {benefit}
                               </h4>
                             </div>
@@ -1233,7 +1227,7 @@ const ProductDetail = () => {
                       <div className="text-center md:text-left">
                         {safeReviews.length > 0 ? (
                           <>
-                            <p className="text-4xl font-display font-bold text-[#1A2E35] mb-2">{averageRating}</p>
+                            <p className="text-3xl md:text-4xl font-display font-bold text-[#1A2E35] mb-2">{averageRating}</p>
                             <div className="flex gap-1 text-[#C5A059] mb-2">
                               {[1,2,3,4,5].map(s => <Star key={s} className={`h-4 w-4 ${s <= Math.round(averageRating) ? 'fill-current' : 'text-[#F2EDE4]'}`} />)}
                             </div>
@@ -1241,7 +1235,7 @@ const ProductDetail = () => {
                           </>
                         ) : (
                           <div className="space-y-1">
-                            <h3 className="text-2xl md:text-3xl font-display font-medium text-[#1A2E35]">Remedy Reviews</h3>
+                            <h3 className="text-xl md:text-2xl lg:text-3xl font-display font-medium text-[#1A2E35]">Remedy Reviews</h3>
                             <p className="text-[10px] font-bold text-[#5A7A5C] uppercase tracking-[0.2em] mt-2">Authentic Customer Experiences</p>
                           </div>
                         )}
@@ -1271,9 +1265,9 @@ const ProductDetail = () => {
                       </div>
                     </div>
 
-                    <div className="grid md:grid-cols-2 gap-8">
+                    <div className="grid md:grid-cols-2 gap-6 md:gap-8">
                       {safeReviews.map((review, i) => (
-                        <div key={review.id} className="p-8 bg-white rounded-3xl border border-[#F2EDE4] space-y-4">
+                        <div key={review.id} className="p-6 md:p-8 bg-white rounded-3xl border border-[#F2EDE4] space-y-4">
                           <div className="flex justify-between">
                             <div className="flex gap-1 text-[#C5A059]">
                               {[1,2,3,4,5].map(s => <Star key={s} className={`h-3 w-3 ${s <= review.rating ? 'fill-current' : 'text-[#F2EDE4]'}`} />)}
@@ -1303,7 +1297,7 @@ const ProductDetail = () => {
           <section className="mt-24 pt-24 border-t border-[#F2EDE4]">
             <div className="text-center mb-12">
               <p className="text-primary font-bold text-[10px] uppercase tracking-[0.3em] mb-3">You May Also Like</p>
-              <h2 className="text-3xl md:text-4xl font-display font-medium text-[#1A2E35]">Explore Related Products</h2>
+              <h2 className="text-2xl md:text-3xl lg:text-4xl font-display font-medium text-[#1A2E35]">Explore Related Products</h2>
             </div>
             
             {isLoadingRelatedProducts ? (
@@ -1385,7 +1379,7 @@ const ProductDetail = () => {
 
           <section className="py-12 border-t border-[#F2EDE4]">
             <div className="max-w-4xl mx-auto">
-              <div className="bg-[#1A2E35] rounded-[3rem] p-8 md:p-16 relative overflow-hidden">
+              <div className="bg-[#1A2E35] rounded-[2rem] md:rounded-[3rem] p-6 md:p-10 lg:p-16 relative overflow-hidden">
                 <div className="absolute -top-24 -right-24 w-64 h-64 bg-white/5 rounded-full blur-3xl" />
                 <div className="absolute -bottom-24 -left-24 w-64 h-64 bg-[#5A7A5C]/10 rounded-full blur-3xl" />
                 
