@@ -96,8 +96,8 @@ const Footer = () => (
             <div className="flex flex-col">
               <span className="text-[10px] uppercase tracking-widest font-bold text-white/40 mb-1">Office Address</span>
               <p className="text-sm font-body leading-relaxed text-white/90">
-                888, 64th Cross Rd, 5th Block,<br />
-                Rajajinagar, Bengaluru, 560010
+                3-178, Panjala House, Narimogru,<br />
+                Puttur, Dakshina Kannada, Karnataka - 574202
               </p>
             </div>
 
