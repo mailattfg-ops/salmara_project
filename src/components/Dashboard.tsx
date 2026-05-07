@@ -20,7 +20,8 @@ import {
   Clock,
   Package,
   Truck,
-  X 
+  X,
+  Menu
 } from "lucide-react";
 import { 
   fetchCustomerViaAdmin, 
@@ -53,6 +54,7 @@ const Dashboard = () => {
   const [fetchingOrders, setFetchingOrders] = useState(false);
   
   // Dashboard state
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [formData, setFormData] = useState({
     firstName: "",
     lastName: "",
@@ -86,6 +88,11 @@ const Dashboard = () => {
        }
     }
   }, [activeTab, user?.id]);
+
+  const handleTabChange = (tab: "profile" | "orders" | "cart") => {
+    setActiveTab(tab);
+    setIsMobileMenuOpen(false);
+  };
 
   const [selectedOrderForTracking, setSelectedOrderForTracking] = useState<any>(null);
 
@@ -271,9 +278,39 @@ const Dashboard = () => {
   }
 
   return (
-    <div className="flex min-h-screen bg-[#FDFBF7]">
+    <div className="flex flex-col md:flex-row min-h-screen bg-[#FDFBF7]">
+      {/* MOBILE HEADER */}
+      <div className="md:hidden flex items-center justify-between p-4 bg-[#1A1A1A] text-white sticky top-0 z-[60]">
+        <button 
+          onClick={() => navigate("/")}
+          className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest text-white/60 hover:text-white transition-all"
+        >
+          <ArrowLeft className="h-4 w-4" /> Back
+        </button>
+        <span className="font-display font-medium text-lg tracking-tight">Dashboard</span>
+        <button 
+          onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+          className="p-2 -mr-2 text-white/60 hover:text-white transition-colors"
+        >
+          {isMobileMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
+        </button>
+      </div>
+
+      {/* MOBILE OVERLAY */}
+      {isMobileMenuOpen && (
+        <div 
+          className="md:hidden fixed inset-0 bg-black/60 z-[55] backdrop-blur-sm"
+          onClick={() => setIsMobileMenuOpen(false)}
+        />
+      )}
+
       {/* SIDEBAR */}
-      <aside className="w-72 bg-[#1A1A1A] text-white flex flex-col shrink-0 sticky top-0 h-screen overflow-y-auto z-50">
+      <aside className={`
+        fixed inset-y-0 left-0 z-[60] w-72 bg-[#1A1A1A] text-white flex flex-col shrink-0 overflow-y-auto
+        transform transition-transform duration-300 ease-in-out
+        md:relative md:translate-x-0 md:sticky md:top-0 md:h-screen
+        ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full'}
+      `}>
         <div className="p-8 pb-12 space-y-8">
           <button 
             onClick={() => navigate("/")}
@@ -295,7 +332,7 @@ const Dashboard = () => {
             Shop Now
           </Link>
           <button 
-            onClick={() => setActiveTab("orders")}
+            onClick={() => handleTabChange("orders")}
             className={`w-full flex items-center gap-4 px-4 py-3.5 rounded-lg text-sm font-medium transition-all ${
               activeTab === "orders" 
                 ? "bg-[#5A7A5C] text-white shadow-lg shadow-[#5A7A5C]/20" 
@@ -306,7 +343,7 @@ const Dashboard = () => {
             My Orders
           </button>
           <button 
-            onClick={() => setActiveTab("cart")}
+            onClick={() => handleTabChange("cart")}
             className={`w-full flex items-center gap-4 px-4 py-3.5 rounded-lg text-sm font-medium transition-all ${
               activeTab === "cart" 
                 ? "bg-[#5A7A5C] text-white shadow-lg shadow-[#5A7A5C]/20" 
@@ -317,7 +354,7 @@ const Dashboard = () => {
             My Cart
           </button>
           <button 
-            onClick={() => setActiveTab("profile")}
+            onClick={() => handleTabChange("profile")}
             className={`w-full flex items-center gap-4 px-4 py-3.5 rounded-lg text-sm font-medium transition-all ${
               activeTab === "profile" 
                 ? "bg-[#5A7A5C] text-white shadow-lg shadow-[#5A7A5C]/20" 
@@ -342,7 +379,7 @@ const Dashboard = () => {
       </aside>
 
       {/* MAIN CONTENT */}
-      <main className="flex-1 p-8 md:p-12 lg:p-16">
+      <main className="flex-1 p-4 sm:p-8 md:p-12 lg:p-16 overflow-x-hidden">
         <div className="max-w-5xl mx-auto">
           <AnimatePresence mode="wait">
             {activeTab === "profile" && (
@@ -470,12 +507,12 @@ const Dashboard = () => {
                 exit={{ opacity: 0, scale: 0.98 }}
                 className="space-y-6"
               >
-                <div className="flex items-center justify-between mb-8">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
                   <div>
                     <h2 className="text-3xl font-display font-medium text-[#1A2E35]">Order History</h2>
                     <p className="text-sm text-[#1A2E35]/40 font-sans-clean mt-1">Track and manage your recent purchases</p>
                   </div>
-                  <div className="bg-[#5A7A5C]/5 px-4 py-2 rounded-xl border border-[#5A7A5C]/10 text-[10px] font-bold text-[#5A7A5C] uppercase tracking-widest">
+                  <div className="bg-[#5A7A5C]/5 px-4 py-2 rounded-xl border border-[#5A7A5C]/10 text-[10px] font-bold text-[#5A7A5C] uppercase tracking-widest self-start sm:self-auto">
                     {orders.length} Total Orders
                   </div>
                 </div>
@@ -494,14 +531,16 @@ const Dashboard = () => {
                         key={order.id}
                         initial={{ opacity: 0, y: 10 }}
                         animate={{ opacity: 1, y: 0 }}
-                        className="bg-white rounded-3xl p-8 border border-[#F2EDE4] hover:border-[#5A7A5C]/20 transition-all group overflow-hidden relative shadow-sm"
+                        className="bg-white rounded-3xl p-8 border border-[#F2EDE4] hover:border-[#5A7A5C]/20 transition-all group relative shadow-sm"
                       >
                         {/* Status Glow Overlay */}
-                        <div className={`absolute top-0 right-0 w-32 h-32 blur-3xl opacity-5 -translate-y-1/2 translate-x-1/2 pointer-events-none ${
-                          isDelivered ? 'bg-green-500' : 'bg-blue-500'
-                        }`} />
+                        <div className="absolute inset-0 rounded-3xl overflow-hidden pointer-events-none">
+                          <div className={`absolute top-0 right-0 w-32 h-32 blur-3xl opacity-5 -translate-y-1/2 translate-x-1/2 pointer-events-none ${
+                            isDelivered ? 'bg-green-500' : 'bg-blue-500'
+                          }`} />
+                        </div>
                         
-                        <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 relative z-10">
+                        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6 relative z-10">
                           <div className="space-y-4">
                             <div className="flex items-center gap-4">
                               {/* <span className="text-lg font-sans-clean font-bold text-[#1A2E35]"> */}
@@ -566,7 +605,7 @@ const Dashboard = () => {
                             </div>
                           </div>
 
-                          <div className="flex flex-col items-end gap-2 text-right">
+                          <div className="flex flex-col items-start lg:items-end gap-2 text-left lg:text-right mt-4 lg:mt-0">
                             <p className="text-[10px] uppercase tracking-widest font-bold text-[#1A2E35]/40">Total Amount</p>
                             {/* <p className="text-2xl font-sans-clean font-bold text-[#1A2E35]"> */}
                              <p className="text-3xl md:text-4xl font-inter font-bold text-[#1A2E35] tracking-tight">
@@ -575,11 +614,23 @@ const Dashboard = () => {
                             </p>
                             
                             {order.cancelledAt && (
-                              <p className="text-[10px] font-bold text-red-500 uppercase tracking-widest mt-1">
-                                {order.displayFinancialStatus === 'REFUNDED' ? 'Refund is completed' : 'Refund is processing'}
-                              </p>
+                              <div className="flex items-center gap-1.5 mt-1">
+                                <p className="text-[10px] font-bold text-red-500 uppercase tracking-widest">
+                                  {order.displayFinancialStatus === 'REFUNDED' ? 'Refund completed' : 'Refund is processing'}
+                                </p>
+                                {order.displayFinancialStatus === 'REFUNDED' && (
+                                  <div className="relative group/tooltip flex items-center justify-center">
+                                    <span className="inline-flex items-center justify-center w-3.5 h-3.5 rounded-full border border-red-500 text-red-500 text-[8px] font-bold cursor-pointer hover:bg-red-500 hover:text-white transition-colors">
+                                      ?
+                                    </span>
+                                    <div className="absolute bottom-full left-1/2 -translate-x-1/2 lg:translate-x-0 lg:left-auto lg:right-0 mb-2 w-[260px] sm:w-72 p-4 bg-[#1A2E35] text-white border border-white/10 rounded-xl shadow-xl opacity-0 invisible group-hover/tooltip:opacity-100 group-hover/tooltip:visible transition-all z-50 text-[11px] font-sans-clean leading-relaxed normal-case tracking-normal text-left cursor-default">
+                                      Please note that the amount may take 5–7 working days to reflect in your account, depending on your bank or payment provider. Refund reference number (RRN) can be shared with the bank for refund tracking. Please reach out to your bank in case you don't receive the credit in the next 5-7 working days.
+                                    </div>
+                                  </div>
+                                )}
+                              </div>
                             )}
-                            <div className="flex flex-col items-end gap-3 mt-2">
+                            <div className="flex flex-col items-start lg:items-end gap-3 mt-2">
                                 {!order.cancelledAt && (
                                   <button 
                                     onClick={() => handleTrackOrder(order)}
@@ -608,7 +659,7 @@ const Dashboard = () => {
                         </div>
 
                         {/* Order Items Preview */}
-                        <div className="mt-4 pt-4 border-t border-[#F2EDE4] flex items-center gap-4">
+                        <div className="mt-4 pt-4 border-t border-[#F2EDE4] flex flex-wrap items-center gap-4">
                           {order.lineItems.edges.slice(0, 4).map((edge: any, idx: number) => (
                             <div key={idx} className="flex items-center gap-4 p-2 bg-[#F8F9FA] rounded-2xl border border-[#F2EDE4] flex-1 max-w-[280px]">
                               <div className="w-12 h-12 rounded-xl overflow-hidden shadow-sm flex-shrink-0 bg-white">

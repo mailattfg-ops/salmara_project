@@ -12,7 +12,8 @@ import {
   Calendar,
   Box,
   MessageCircle,
-  ArrowRight
+  ArrowRight,
+  Building2
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Header from '@/components/Header';
@@ -212,6 +213,7 @@ const TrackOrder = () => {
     const s = status?.toUpperCase() || '';
     if (s.includes('DELIVERED')) return 'Delivered';
     if (s.includes('OFD') || s.includes('OUT FOR DELIVERY')) return 'Out for Delivery';
+    if (s.includes('DESTINATION')) return 'Reached Destination Hub';
     if (s.includes('TRANSIT')) return 'In Transit';
     if (s.includes('AWAITING PICKUP') || s.includes('AWB') || s.includes('NEW')) return 'Awaiting Pickup';
     if (s.includes('SHIPPED') || s.includes('PICKED UP') || s.includes('PICKUP')) return 'Shipped';
@@ -290,11 +292,12 @@ const TrackOrder = () => {
     const logisticsMilestones = [
       { status: 'Shipped', icon: <Truck className="h-5 w-5" /> },
       { status: 'In Transit', icon: <MapPin className="h-5 w-5" /> },
+      { status: 'Reached Destination Hub', icon: <Building2 className="h-5 w-5" /> },
       { status: 'Out for Delivery', icon: <Truck className="h-5 w-5" /> },
       { status: 'Delivered', icon: <CheckCircle2 className="h-5 w-5" /> },
     ];
 
-    const milestoneOrder = ['Shipped', 'In Transit', 'Out for Delivery', 'Delivered'];
+    const milestoneOrder = ['Shipped', 'In Transit', 'Reached Destination Hub', 'Out for Delivery', 'Delivered'];
     const currentIndex = milestoneOrder.indexOf(mappedStatus);
 
     // 📏 Cumulative Correction:
@@ -316,7 +319,8 @@ const TrackOrder = () => {
         const match = activities.find(a => {
           const act = (a.activity || a.status || '').toUpperCase();
           if (step.status === 'Shipped') return act.includes('PICKED UP') || act.includes('SHIPPED') || act.includes('MANIFEST') || act.includes('AWB');
-          if (step.status === 'In Transit') return act.includes('TRANSIT') || act.includes('ARRIVED') || act.includes('DEPARTED') || act.includes('HUB');
+          if (step.status === 'In Transit') return (act.includes('TRANSIT') || act.includes('ARRIVED') || act.includes('DEPARTED') || act.includes('HUB')) && !act.includes('DESTINATION');
+          if (step.status === 'Reached Destination Hub') return act.includes('DESTINATION');
           if (step.status === 'Out for Delivery') return act.includes('OUT FOR DELIVERY') || act.includes('OFD');
           if (step.status === 'Delivered') return act.includes('DELIVERED') || act.includes('DLVD');
           return false;
@@ -524,6 +528,7 @@ const TrackOrder = () => {
                           {step.status === 'Preparing for Shipment' && "Our quality team is verifying and packing your items for safe transit."}
                           {step.status === 'Shipped' && (step.completed ? "The package has been handed over to our logistics partner." : "Awaiting pickup by our courier partner.")}
                           {step.status === 'In Transit' && (step.completed ? "Your package is moving through our logistics network." : "Updates will appear as the package moves.")}
+                          {step.status === 'Reached Destination Hub' && (step.completed ? "Your package has arrived at the final sorting facility." : "Awaiting arrival at the local destination hub.")}
                           {step.status === 'Out for Delivery' && (step.completed ? "Your package is with the delivery executive." : "Almost there! Delivery scheduled soon.")}
                           {step.status === 'Delivered' && (step.completed ? "Successfully delivered to your destination." : "Expected arrival today.")}
                           {step.status === 'Cancelled' && "This order has been cancelled."}
