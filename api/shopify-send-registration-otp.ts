@@ -80,8 +80,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const hash = crypto.createHmac('sha256', jwtSecret).update(payload).digest('hex');
 
     console.log(`\n📦 [REGISTRATION PRE-VERIFY] Generating OTP for: ${email} | ${formattedPhone}`);
-    // OTP deliberately NOT logged for security in production, but we ensure it matches DLT rules
-    // console.log(`🔑 [REGISTRATION PRE-VERIFY] Generated OTP: ${otp}\n`); 
+    console.log(`\n================================`);
+    console.log(`🔑 REGISTRATION OTP: ${otp}`);
+    console.log(`================================\n`);
 
     // 4. Send SMS via Edumarc
     const smsApiKey = process.env.EDUMARC_SMS_API_KEY;
