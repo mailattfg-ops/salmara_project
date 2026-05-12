@@ -58,7 +58,9 @@ const LoginPage = () => {
 
  
   useEffect(() => {
-    setOtp("");
+    if (view !== "set-new-password") {
+      setOtp("");
+    }
     setShowPassword(false);
     setShowNewPassword(false);
     setShowConfirmPassword(false);

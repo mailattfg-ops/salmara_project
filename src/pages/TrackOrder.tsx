@@ -12,7 +12,8 @@ import {
   Calendar,
   Box,
   MessageCircle,
-  ArrowRight
+  ArrowRight,
+  Building2
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Header from '@/components/Header';
@@ -42,8 +43,9 @@ const TrackOrder = () => {
         let awbToUse = awbParam;
         let finalOrder = null;
 
-        // If we don't have an AWB but have order + email, fetch order first
-        if (!awbToUse && orderIdParam && emailParam) {
+        // We always want to fetch the order if we have order + email
+        // so we can use Shopify's native delivery state if available
+        if (orderIdParam && emailParam) {
           // Attempt 1: Fetch by exact GID
           const fetchById = async (id: string) => {
             const res = await fetch('/api/shopify-admin', {
@@ -59,6 +61,8 @@ const TrackOrder = () => {
                       processedAt
                       displayFulfillmentStatus
                       fulfillments(first: 5) {
+                        displayStatus
+                        updatedAt
                         trackingInfo(first: 5) {
                           number
                         }
@@ -90,6 +94,8 @@ const TrackOrder = () => {
                           processedAt
                           displayFulfillmentStatus
                           fulfillments(first: 5) {
+                            displayStatus
+                            updatedAt
                             trackingInfo(first: 5) {
                               number
                             }
@@ -207,8 +213,10 @@ const TrackOrder = () => {
     const s = status?.toUpperCase() || '';
     if (s.includes('DELIVERED')) return 'Delivered';
     if (s.includes('OFD') || s.includes('OUT FOR DELIVERY')) return 'Out for Delivery';
+    if (s.includes('DESTINATION')) return 'Reached Destination Hub';
     if (s.includes('TRANSIT')) return 'In Transit';
-    if (s.includes('SHIPPED') || s.includes('AWB') || s.includes('NEW') || s.includes('PICKED UP') || s.includes('PICKUP')) return 'Shipped';
+    if (s.includes('AWAITING PICKUP') || s.includes('AWB') || s.includes('NEW')) return 'Awaiting Pickup';
+    if (s.includes('SHIPPED') || s.includes('PICKED UP') || s.includes('PICKUP')) return 'Shipped';
     if (s.includes('CANCEL')) return 'Cancelled';
     if (s.includes('RTO') || s.includes('RETURN') || s.includes('NFI')) return 'Returned to Origin';
     return 'In Transit'; // Default for logistics
@@ -229,12 +237,12 @@ const TrackOrder = () => {
       },
       {
         status: 'Payment Confirmed',
-        completed: isPaid,
+        completed: isPaid || hasShipment,
         icon: <CheckCircle2 className="h-5 w-5" />,
       },
       {
         status: 'Preparing for Shipment',
-        completed: isPaid && (isFulfilled || hasShipment),
+        completed: (isPaid && isFulfilled) || hasShipment,
         icon: <Box className="h-5 w-5" />,
       },
     ];
@@ -251,7 +259,13 @@ const TrackOrder = () => {
 
     // 🔄 Shiprocket status mapping
     const srStatusRaw = trackingData?.track_status || trackingData?.status || 'AWAITING PICKUP';
-    const mappedStatus = mapShiprocketStatus(srStatusRaw);
+    let mappedStatus = mapShiprocketStatus(srStatusRaw);
+
+    // Override with Shopify's direct status if available (helps when shiprocket proxy is delayed)
+    const isShopifyDelivered = shopifyOrder?.fulfillments?.some((f: any) => f.displayStatus === 'DELIVERED') || false;
+    if (isShopifyDelivered) {
+      mappedStatus = 'Delivered';
+    }
 
     // ❌ Handle Hard States
     if (mappedStatus === 'Cancelled') {
@@ -278,17 +292,20 @@ const TrackOrder = () => {
     const logisticsMilestones = [
       { status: 'Shipped', icon: <Truck className="h-5 w-5" /> },
       { status: 'In Transit', icon: <MapPin className="h-5 w-5" /> },
+      { status: 'Reached Destination Hub', icon: <Building2 className="h-5 w-5" /> },
       { status: 'Out for Delivery', icon: <Truck className="h-5 w-5" /> },
       { status: 'Delivered', icon: <CheckCircle2 className="h-5 w-5" /> },
     ];
 
-    const milestoneOrder = ['Shipped', 'In Transit', 'Out for Delivery', 'Delivered'];
+    const milestoneOrder = ['Shipped', 'In Transit', 'Reached Destination Hub', 'Out for Delivery', 'Delivered'];
     const currentIndex = milestoneOrder.indexOf(mappedStatus);
 
     // 📏 Cumulative Correction:
     // If we have reached ANY logistics status (Shipped or later), 
-    // force "Preparing for Shipment" to be completed.
-    if (currentIndex >= 0) {
+    // or if we have tracking data (meaning it's shipped/awaiting pickup)
+    // we already forced steps 1 and 2 completed above, but let's be absolutely certain.
+    if (currentIndex >= 0 || mappedStatus === 'Awaiting Pickup') {
+      steps[1].completed = true;
       steps[2].completed = true;
     }
 
@@ -302,12 +319,16 @@ const TrackOrder = () => {
         const match = activities.find(a => {
           const act = (a.activity || a.status || '').toUpperCase();
           if (step.status === 'Shipped') return act.includes('PICKED UP') || act.includes('SHIPPED') || act.includes('MANIFEST') || act.includes('AWB');
-          if (step.status === 'In Transit') return act.includes('TRANSIT') || act.includes('ARRIVED') || act.includes('DEPARTED') || act.includes('HUB');
+          if (step.status === 'In Transit') return (act.includes('TRANSIT') || act.includes('ARRIVED') || act.includes('DEPARTED') || act.includes('HUB')) && !act.includes('DESTINATION');
+          if (step.status === 'Reached Destination Hub') return act.includes('DESTINATION');
           if (step.status === 'Out for Delivery') return act.includes('OUT FOR DELIVERY') || act.includes('OFD');
           if (step.status === 'Delivered') return act.includes('DELIVERED') || act.includes('DLVD');
           return false;
         });
         stageDate = match?.date || trackingData.shipment_track_activities[0]?.date;
+      } else if (isShopifyDelivered && isCompleted && step.status === 'Delivered') {
+        const df = shopifyOrder.fulfillments.find((f: any) => f.displayStatus === 'DELIVERED');
+        if (df?.updatedAt) stageDate = df.updatedAt;
       }
 
       steps.push({
@@ -322,7 +343,8 @@ const TrackOrder = () => {
   };
 
   const timeline = generateTimeline();
-  const currentStatus = trackingData?.track_status || trackingData?.status || 'Processing';
+  const isShopifyDeliveredGlobal = shopifyOrder?.fulfillments?.some((f: any) => f.displayStatus === 'DELIVERED') || false;
+  const currentStatus = isShopifyDeliveredGlobal ? 'Delivered' : (trackingData?.track_status || trackingData?.status || 'Processing');
   const trackUrl = trackingData?.track_url || shopifyOrder?.fulfillments?.[0]?.trackingInfo?.[0]?.url;
   const events: TrackingEvent[] = trackingData?.shipment_track_activities || [];
   const estDeliveryDate = trackingData?.expected_delivery_date || trackingData?.etd;
@@ -506,6 +528,7 @@ const TrackOrder = () => {
                           {step.status === 'Preparing for Shipment' && "Our quality team is verifying and packing your items for safe transit."}
                           {step.status === 'Shipped' && (step.completed ? "The package has been handed over to our logistics partner." : "Awaiting pickup by our courier partner.")}
                           {step.status === 'In Transit' && (step.completed ? "Your package is moving through our logistics network." : "Updates will appear as the package moves.")}
+                          {step.status === 'Reached Destination Hub' && (step.completed ? "Your package has arrived at the final sorting facility." : "Awaiting arrival at the local destination hub.")}
                           {step.status === 'Out for Delivery' && (step.completed ? "Your package is with the delivery executive." : "Almost there! Delivery scheduled soon.")}
                           {step.status === 'Delivered' && (step.completed ? "Successfully delivered to your destination." : "Expected arrival today.")}
                           {step.status === 'Cancelled' && "This order has been cancelled."}
