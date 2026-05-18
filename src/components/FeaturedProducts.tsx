@@ -228,7 +228,7 @@ const FeaturedProducts = () => {
       const lineItems = [{
         variantId: variant.id,
         quantity: quantity,
-        unitPrice: finalPrice * (1 + taxPercentage / 100),
+        unitPrice: finalPrice,
         title:
           finalTitle && finalTitle !== "Default Title"
             ? `${selectedProductForCheckout.node.title} - ${finalTitle}`

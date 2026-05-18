@@ -955,7 +955,7 @@ const DashboardCart = ({
               <div className="flex items-center justify-between mt-4">
                 {/* <p className="font-display font-bold text-[#1A2E35]"> */}
                 <p className="text-lg md:text-xl font-inter font-semibold text-[#1A2E35]">
-                  {item.price.currencyCode === 'INR' ? '₹' : item.price.currencyCode} {(parseFloat(item.price.amount) * (1 + taxPercentage / 100)).toFixed(2)}
+                  {item.price.currencyCode === 'INR' ? '₹' : item.price.currencyCode} {(parseFloat(item.price.amount)).toFixed(2)}
                 </p>
 
                 <div className="flex items-center gap-3 bg-[#F8F9FA] rounded-lg px-2">

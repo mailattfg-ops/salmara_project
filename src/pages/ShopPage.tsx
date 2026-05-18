@@ -103,7 +103,7 @@ const getProductDisplayPrice = (product: ShopifyProduct, taxPercentage: number =
   }
 
   return {
-    amount: baseAmount * (1 + taxPercentage / 100),
+    amount: baseAmount,
     baseAmount,
     currency,
     fromMetafield,
