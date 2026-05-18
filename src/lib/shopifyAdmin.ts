@@ -1118,8 +1118,12 @@ export async function createHybridCheckout(
         throw new Error("Draft order invoice URL missing");
       }
 
+      const returnUrl = "https://salmaraayurveda.com/shop";
+      const separator = invoiceUrl.includes('?') ? '&' : '?';
+      const finalInvoiceUrl = `${invoiceUrl}${separator}return_to=${encodeURIComponent(returnUrl)}`;
+
       localStorage.setItem('shopify_checkout_pending', 'true');
-      return { success: true, checkoutUrl: invoiceUrl };
+      return { success: true, checkoutUrl: finalInvoiceUrl };
     }
 
     const domain = import.meta.env.VITE_SHOPIFY_STORE_DOMAIN || "salmara-5.myshopify.com";
@@ -1140,6 +1144,7 @@ export async function createHybridCheckout(
       // This forces the classic Shopify Checkout UI (with "Same as billing" checkboxes)
       const params = new URLSearchParams();
       params.append('locale', 'en');
+      params.append('return_to', 'https://salmaraayurveda.com/shop');
       if (customerEmail) {
         params.append('checkout[email]', customerEmail);
       }
