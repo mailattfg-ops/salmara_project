@@ -69,7 +69,7 @@ const QuickVariantSelect = ({
   const basePrice = (hasValidMetafieldPrice && usesMetafieldVariantOptions)
     ? selectedMetafieldPrice
     : parseFloat(selectedVariant?.price?.amount || "0");
-  const displayPrice = basePrice * (1 + taxPercentage / 100);
+  const displayPrice = basePrice;
 
 
   const handleAction = async (action: 'cart' | 'buy') => {
@@ -122,7 +122,7 @@ const QuickVariantSelect = ({
                 </div>
                 {selectedVariant?.compareAtPrice && parseFloat(selectedVariant.compareAtPrice.amount) > basePrice && (
                   <span className="text-sm text-[#1A2E35]/60 line-through">
-                    {selectedVariant.compareAtPrice.currencyCode === 'INR' ? '₹' : selectedVariant.compareAtPrice.currencyCode} {(parseFloat(selectedVariant.compareAtPrice.amount) * (1 + taxPercentage / 100)).toFixed(2)}
+                    {selectedVariant.compareAtPrice.currencyCode === 'INR' ? '₹' : selectedVariant.compareAtPrice.currencyCode} {(parseFloat(selectedVariant.compareAtPrice.amount)).toFixed(2)}
                   </span>
                 )}
 

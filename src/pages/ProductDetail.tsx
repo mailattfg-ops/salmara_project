@@ -80,7 +80,7 @@ const ProductDetail = () => {
   const { addItem, isLoading } = useCartStore();
   const { toggleItem, isInWishlist } = useWishlistStore();
   const { addReview, getReviews, getAverageRating } = useReviewStore();
-  const [activeTab, setActiveTab] = useState<'description' | 'additional' | 'shipping' | 'faq' | 'reviews'>('description');
+  const [activeTab, setActiveTab] = useState<'description' | 'additional' | 'safety' | 'shipping' | 'faq' | 'reviews'>('description');
   const [reviewModalOpen, setReviewModalOpen] = useState(false);
   const [reviewRating, setReviewRating] = useState(5);
   const [reviewComment, setReviewComment] = useState("");
@@ -764,7 +764,7 @@ const ProductDetail = () => {
                   <div className="flex flex-col">
                     <span className="text-2xl md:text-3xl font-sans-clean font-bold text-[#C5A059]">
                       {selectedVariant?.price.currencyCode === 'INR' ? '₹' : selectedVariant?.price.currencyCode}{' '}
-                      {((hasValidMetafieldPrice && usesMetafieldVariantOptions ? selectedMetafieldPrice : parseFloat(selectedVariant?.price.amount || "0")) * (1 + taxPercentage / 100)).toFixed(2)}
+                      {((hasValidMetafieldPrice && usesMetafieldVariantOptions ? selectedMetafieldPrice : parseFloat(selectedVariant?.price.amount || "0"))).toFixed(2)}
                     </span>
                     <span className="text-[10px] font-bold text-[#1A2E35]/30 uppercase tracking-widest mt-1">Incl. {taxPercentage}% Taxes</span>
                   </div>
@@ -772,7 +772,7 @@ const ProductDetail = () => {
                   {selectedVariant?.compareAtPrice && parseFloat(selectedVariant.compareAtPrice.amount) > parseFloat(selectedVariant.price.amount) && (
                     <span className="text-2xl md:text-3xl text-[#1A2E35]/60 line-through">
                       {selectedVariant.compareAtPrice.currencyCode === 'INR' ? '₹' : selectedVariant.compareAtPrice.currencyCode}{' '}
-                      {(parseFloat(selectedVariant.compareAtPrice.amount) * (1 + taxPercentage / 100)).toFixed(2)}
+                      {(parseFloat(selectedVariant.compareAtPrice.amount)).toFixed(2)}
                     </span>
                   )}
                 </div>
@@ -882,14 +882,14 @@ const ProductDetail = () => {
           </div>
 
           {/* Tabs Section */}
-          <div className="mt-10 md:mt-16 lg:mt-24 max-w-5xl mx-auto">
+          <div className="mt-10 md:mt-16 lg:mt-24 max-w-7xl mx-auto px-4">
             <div className="flex items-center justify-center mb-12">
-              <div className="flex gap-2 md:gap-4 flex-wrap justify-center bg-[#FDFBF7] p-2 rounded-[2rem] border border-[#F2EDE4] shadow-sm">
-                {(['description', 'additional', 'shipping', 'faq', 'reviews'] as const).map((tab) => (
+              <div className="flex gap-2 md:gap-4 flex-wrap lg:flex-nowrap justify-center bg-[#FDFBF7] p-2 rounded-[2rem] border border-[#F2EDE4] shadow-sm lg:overflow-x-auto no-scrollbar max-w-full">
+                {(['description', 'additional', 'safety', 'shipping', 'faq', 'reviews'] as const).map((tab) => (
                   <button
                     key={tab}
                     onClick={() => setActiveTab(tab)}
-                    className={`relative px-6 py-3 md:px-8 md:py-4 rounded-[1.5rem] text-[10px] md:text-xs font-bold uppercase tracking-[0.2em] transition-all whitespace-nowrap ${
+                    className={`relative px-6 py-3 md:px-8 md:py-4 rounded-[1.5rem] text-[10px] md:text-xs font-bold uppercase tracking-[0.2em] transition-all whitespace-nowrap lg:shrink-0 ${
                       activeTab === tab ? 'text-white' : 'text-[#1A2E35]/50 hover:text-[#1A2E35]'
                     }`}
                   >
@@ -901,7 +901,7 @@ const ProductDetail = () => {
                       />
                     )}
                     <span className="relative z-10">
-                      {tab === 'shipping' ? 'Shipping & Returns' : tab === 'faq' ? 'FAQ' : tab === 'additional' ? 'Ingredients & Benefits' : tab}
+                      {tab === 'shipping' ? 'Shipping' : tab === 'faq' ? 'FAQ' : tab === 'additional' ? 'Ingredients' : tab === 'safety' ? 'Safety' : tab === 'description' ? 'Overview' : tab}
                     </span>
                   </button>
                 ))}
@@ -1033,43 +1033,42 @@ const ProductDetail = () => {
                       </div>
                     </div>
 
-                    {/* Additional Notes Section */}
-                    {getMetafieldValue('warnings') && (
-                      <div className="pt-16 mt-16 border-t border-[#F2EDE4]">
-                        <div className="relative bg-gradient-to-br from-[#FFF5F5] to-white border border-[#FFEBEB] rounded-[2.5rem] p-6 md:p-8 lg:p-12 overflow-hidden shadow-sm">
-                          <div className="absolute top-0 right-0 p-8 opacity-5">
-                            <AlertCircle className="w-64 h-64 text-[#DC2626]" />
-                          </div>
-                          
-                          <div className="relative z-10 flex flex-col md:flex-row gap-8 md:gap-12 items-start">
-                            <div className="flex-shrink-0">
-                              <div className="h-16 w-16 bg-[#DC2626]/10 rounded-2xl flex items-center justify-center">
-                                <AlertCircle className="h-8 w-8 text-[#DC2626]" />
-                              </div>
-                            </div>
-                            
-                            <div className="space-y-6 flex-1">
-                              <div>
-                                <h3 className="text-[10px] font-bold uppercase tracking-[0.3em] text-[#DC2626] mb-2">Important Considerations</h3>
-                                <h4 className="text-xl md:text-2xl font-display font-medium text-[#1A2E35]">Safety & Usage Guidelines</h4>
-                              </div>
-                              <div className="grid gap-4">
-                                {getMetafieldValue('warnings').split(/\n+/).map((note: string, i: number) => (
-                                  <div key={i} className="flex gap-4 items-start bg-white/60 p-5 rounded-2xl border border-[#FFEBEB]/50 backdrop-blur-sm shadow-sm">
-                                    <div className="h-6 w-6 rounded-full bg-[#DC2626]/10 flex items-center justify-center shrink-0 mt-0.5">
-                                      <span className="text-[#DC2626] text-[10px] font-bold">{i + 1}</span>
-                                    </div>
-                                    <p className="text-sm text-[#1A2E35]/80 font-sans-clean leading-relaxed">
-                                      {note.trim()}
-                                    </p>
-                                  </div>
-                                ))}
-                              </div>
-                            </div>
-                          </div>
-                        </div>
+                  </m.div>
+                )}
+
+                {activeTab === 'safety' && (
+                  <m.div
+                    key="safety"
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -10 }}
+                    className="space-y-8 max-w-3xl mx-auto"
+                  >
+                    <div className="space-y-6">
+                      <div className="flex items-center gap-3">
+                        <ShieldCheck className="h-5 w-5 text-[#5A7A5C]" />
+                        <h3 className="text-xs font-bold uppercase tracking-[0.3em] text-[#1A2E35]">Safety & Usage Guidelines</h3>
                       </div>
-                    )}
+                      
+                      {getMetafieldValue('warnings') ? (
+                        <div className="grid gap-4">
+                          {getMetafieldValue('warnings').split(/\n+/).map((note: string, i: number) => (
+                            <div key={i} className="flex gap-4 p-5 bg-white border border-[#F2EDE4] rounded-2xl items-start group hover:border-[#5A7A5C]/30 transition-colors">
+                              <div className="h-6 w-6 rounded-full bg-[#5A7A5C]/10 flex items-center justify-center shrink-0 mt-0.5">
+                                <span className="text-[#5A7A5C] text-[10px] font-bold">{i + 1}</span>
+                              </div>
+                              <p className="text-sm text-[#1A2E35]/80 font-sans-clean leading-relaxed mt-0.5">
+                                {note.trim()}
+                              </p>
+                            </div>
+                          ))}
+                        </div>
+                      ) : (
+                        <div className="p-8 text-center bg-[#FDFBF7] rounded-2xl border border-dashed border-[#F2EDE4]">
+                          <p className="text-xs text-[#1A2E35]/40 italic uppercase tracking-widest font-sans-clean">No specific safety guidelines provided for this formulation.</p>
+                        </div>
+                      )}
+                    </div>
                   </m.div>
                 )}
 
@@ -1356,7 +1355,7 @@ const ProductDetail = () => {
                             <div className="flex flex-col items-end ml-2 shrink-0">
                               <span className="text-[#C5A059] font-sans-clean font-bold text-base md:text-lg leading-none">
                                 {rpDisplayCurrency === "INR" ? "₹" : rpDisplayCurrency}{" "}
-                                {(rpDisplayPrice * (1 + taxPercentage / 100)).toFixed(2)}
+                                {(rpDisplayPrice).toFixed(2)}
                               </span>
                               <span className="text-[8px] font-bold text-[#1A2E35]/30 uppercase tracking-tighter mt-1">Incl. {taxPercentage}% Taxes</span>
                             </div>

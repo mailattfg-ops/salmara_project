@@ -39,7 +39,7 @@ const ProductCard = ({
   const variant = product.node.variants.edges[0]?.node;
   const image = product.node.images.edges[0]?.node;
   const basePrice = parseFloat(variant?.price?.amount || "0");
-  const displayPrice = basePrice * (1 + taxPercentage / 100);
+  const displayPrice = basePrice;
   const currency = variant?.price?.currencyCode === 'INR' ? '₹' : variant?.price?.currencyCode;
 
 

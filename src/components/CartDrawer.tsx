@@ -18,7 +18,7 @@ export const CartDrawer = () => {
   const { taxPercentage, fetchSettings } = useSettingsStore();
   const totalItems = items.reduce((sum, item) => sum + item.quantity, 0);
   const subtotal = items.reduce((sum, item) => sum + (parseFloat(item.price.amount) * item.quantity), 0);
-  const totalPrice = subtotal * (1 + taxPercentage / 100);
+  const totalPrice = subtotal;
 
   useEffect(() => { 
     if (isOpen) {
@@ -107,7 +107,7 @@ export const CartDrawer = () => {
                             <p className="text-xs text-muted-foreground font-sans-clean">{item.variantTitle}</p>
                           )}
                           <p className="font-sans-clean font-semibold text-sm mt-1">
-                            {item.price.currencyCode === 'INR' ? '₹' : item.price.currencyCode} {(parseFloat(item.price.amount) * (1 + taxPercentage / 100)).toFixed(2)}
+                            {item.price.currencyCode === 'INR' ? '₹' : item.price.currencyCode} {(parseFloat(item.price.amount)).toFixed(2)}
                           </p>
 
                         </div>
@@ -143,18 +143,7 @@ export const CartDrawer = () => {
                 </div>
                 <div className="flex-shrink-0 space-y-4 pt-4 border-t border-border">
                   <div className="space-y-1.5">
-                    <div className="flex justify-between items-center text-sm text-muted-foreground">
-                      <span>Subtotal (Base)</span>
-                      <span className="font-sans-clean">
-                        {items[0]?.price.currencyCode === 'INR' ? '₹' : items[0]?.price.currencyCode} {subtotal.toFixed(2)}
-                      </span>
-                    </div>
-                    <div className="flex justify-between items-center text-sm text-muted-foreground">
-                      <span>Estimated Tax ({taxPercentage}%)</span>
-                      <span className="font-sans-clean">
-                        {items[0]?.price.currencyCode === 'INR' ? '₹' : items[0]?.price.currencyCode} {(subtotal * taxPercentage / 100).toFixed(2)}
-                      </span>
-                    </div>
+
                     <div className="flex justify-between items-center pt-2">
                       <span className="font-display font-semibold">Total (Incl. Taxes)</span>
                       <span className="text-xl font-sans-clean font-bold">

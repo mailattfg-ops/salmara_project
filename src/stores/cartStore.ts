@@ -122,7 +122,7 @@ export const useCartStore = create<CartStore>()(
       const lineItems = items.map(item => ({
         variantId: item.variantId,
         quantity: item.quantity,
-        unitPrice: Number(item.price?.amount || 0) * (1 + taxPercentage / 100),
+        unitPrice: Number(item.price?.amount || 0),
         title:
           item.variantTitle && item.variantTitle !== "Default Title"
             ? `${item.product.node.title} - ${item.variantTitle}`
